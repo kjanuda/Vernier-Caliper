@@ -1,0 +1,2058 @@
+/* ═══════════════════════════════════════════════════════════════════
+   shared/site.css  —  Global styles shared across all tool pages
+   and the landing page.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Smooth scroll (respects reduced motion) ─────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* ── Focus-visible ring (keyboard accessibility) ─────────────── */
+
+:focus-visible {
+    outline: 2px solid var(--accent, #4f8ef7);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ── Skip-to-content link ────────────────────────────────────── */
+
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 16px;
+    z-index: 999;
+    padding: 10px 20px;
+    background: var(--accent, #4f8ef7);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 0 0 8px 8px;
+    text-decoration: none;
+    transition: top .2s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* ── Tokens (must match each tool's :root for seamless blending) ── */
+
+:root {
+    --bg: #0d1117;
+    --surface: #161b27;
+    --surface2: #1f2535;
+    --border: #2a3050;
+    --accent: #4f8ef7;
+    --accent-lo: rgba(79, 142, 247, .22);
+    --green: #3ddc84;
+    --red: #ff5555;
+    --gold: #f5c842;
+    --text: #dde3f0;
+    --text-dim: #6b7a99;
+    --font: 'Segoe UI', system-ui, sans-serif;
+    --radius: 12px;
+}
+
+/* ── Base body — dark background for all pages ────────────────── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+}
+
+/* ── Site navigation bar (used by every tool page) ────────────── */
+
+.site-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0 4px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid var(--border);
+}
+
+.site-nav-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 5px 12px;
+    border: 1px solid rgba(79, 142, 247, .35);
+    border-radius: 7px;
+    background: rgba(79, 142, 247, .08);
+    transition: background .18s, box-shadow .18s;
+}
+
+.site-nav-back:hover {
+    background: rgba(79, 142, 247, .18);
+    box-shadow: 0 0 10px var(--accent-lo);
+}
+
+.site-nav-back:active {
+    transform: scale(0.97);
+}
+
+/* Library pill beside "← Home" on every tool page (link to /library/). */
+
+.site-nav-lib::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    flex: none;
+    background: linear-gradient(currentColor, currentColor) 0 0 / 4px 4px no-repeat, linear-gradient(currentColor, currentColor) 6px 0 / 4px 4px no-repeat, linear-gradient(currentColor, currentColor) 0 6px / 4px 4px no-repeat, linear-gradient(currentColor, currentColor) 6px 6px / 4px 4px no-repeat;
+}
+
+/* Breadcrumb trail, on the same line as Home / Library
+   (written into the HTML by deploy/build-site-nav.js). One line always:
+   the current page's name shrinks with an ellipsis, never wraps. */
+
+.site-nav {
+    min-width: 0;
+}
+
+.site-nav-trail {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-left: 12px;
+    border-left: 1px solid var(--border);
+}
+
+.site-nav-trail ol {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    list-style: none;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--text-dim);
+}
+
+.site-nav-trail {
+    overflow: hidden;
+}
+
+.site-nav-trail ol {
+    min-width: 0;
+}
+
+.site-nav-trail li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.site-nav-trail li>a,
+.site-nav-trail li>span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* A middle crumb (a section page's parent tool) gives way first. */
+
+.site-nav-trail li:not(:first-child):not([aria-current]) {
+    flex-shrink: 4;
+}
+
+.site-nav-trail li+li::before {
+    content: "\203A";
+    margin: 0 7px;
+    opacity: .55;
+    flex: none;
+}
+
+.site-nav-trail a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 4px 0;
+}
+
+.site-nav-trail a:hover {
+    text-decoration: underline;
+}
+
+.site-nav-trail a:focus-visible,
+.site-nav-back:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.site-nav-trail li[aria-current] {
+    color: var(--text);
+}
+
+/* Hub pages: the bar sits inside the hero, so no rule underneath. */
+
+.site-nav--hub {
+    border-bottom: 0;
+    padding: 0 0 4px;
+    margin-bottom: 4px;
+}
+
+@media (max-width: 500px) {
+    .site-nav {
+        gap: 8px;
+    }
+    /* Home and Library become icon buttons; their text stays for readers. */
+    nav.site-nav>a.site-nav-back {
+        font-size: 0;
+        gap: 0;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        justify-content: center;
+        flex: none;
+        position: relative;
+    }
+    nav.site-nav>a.site-nav-back:not(.site-nav-lib)::before {
+        content: "\2190";
+        font-size: 1rem;
+        line-height: 1;
+    }
+    nav.site-nav>a.site-nav-lib::before {
+        width: 12px;
+        height: 12px;
+        background: linear-gradient(currentColor, currentColor) 0 0 / 5px 5px no-repeat, linear-gradient(currentColor, currentColor) 7px 0 / 5px 5px no-repeat, linear-gradient(currentColor, currentColor) 0 7px / 5px 5px no-repeat, linear-gradient(currentColor, currentColor) 7px 7px / 5px 5px no-repeat;
+    }
+    .site-nav-trail {
+        padding-left: 8px;
+    }
+    .site-nav-trail li:not(:first-child):not([aria-current]) {
+        display: none;
+    }
+    /* Touch: grow the hit area of the trail links without growing the row. */
+    .site-nav-trail a {
+        padding: 12px 0;
+        margin: -8px 0;
+    }
+}
+
+@media (max-width: 360px) {
+    /* Narrowest phones: the category stays; the page's own H1 names the tool. */
+    .site-nav-trail li[aria-current] {
+        display: none;
+    }
+}
+
+.site-nav-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+}
+
+/* ── Landing page layout ──────────────────────────────────────── */
+
+.landing-header {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    padding: 48px 0 32px;
+}
+
+/* Big hero logo — sits to the left of the title block */
+
+.landing-logo-hero {
+    height: 150px;
+    width: auto;
+    flex-shrink: 0;
+    /* drop-shadow gives depth without a visible box */
+    filter: drop-shadow(0 4px 24px rgba(79, 142, 247, 0.25));
+}
+
+/* Title + tagline wrapper */
+
+.landing-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.landing-header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(120deg, #4f8ef7 0%, #a78bfa 55%, #f5c842 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.landing-header p {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Collapse to vertical stack on narrow screens */
+
+@media (max-width: 560px) {
+    .landing-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 48px 0 24px;
+    }
+    .landing-logo-hero {
+        height: 110px;
+    }
+    .landing-header h1 {
+        font-size: 2.2rem;
+    }
+}
+
+/* ── Tool grid ────────────────────────────────────────────────── */
+
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    padding: 0 0 48px;
+}
+
+/* ── Tool card ────────────────────────────────────────────────── */
+
+.tool-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform .22s, box-shadow .22s, border-color .22s;
+}
+
+.tool-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 40px rgba(79, 142, 247, .22);
+    border-color: rgba(79, 142, 247, .55);
+}
+
+.tool-card:hover .tool-card-thumb {
+    filter: brightness(1.08);
+}
+
+/* top accent stripe */
+
+.tool-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: var(--card-accent, var(--accent));
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.tool-card-thumb {
+    width: 100%;
+    height: 130px;
+    object-fit: contain;
+    background: var(--surface2);
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    transition: filter .22s;
+}
+
+/* placeholder thumb when no image is set */
+
+.tool-card-thumb.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--text-dim);
+}
+
+.tool-card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.tool-card-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.tool-card-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+}
+
+.tool-card-footer {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tool-card-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--accent-lo);
+    color: var(--accent);
+}
+
+.tool-card-tag.coming-soon {
+    background: rgba(107, 122, 153, .15);
+    color: var(--text-dim);
+}
+
+.tool-card-arrow {
+    font-size: 1rem;
+    color: var(--accent);
+    transition: transform .18s;
+}
+
+.tool-card:hover .tool-card-arrow {
+    transform: translateX(4px);
+}
+
+/* ── "Coming soon" overlay ────────────────────────────────────── */
+
+.tool-card.disabled {
+    pointer-events: none;
+    opacity: 0.55;
+}
+
+/* ── Landing footer ───────────────────────────────────────────── */
+
+.landing-footer {
+    padding: 32px 0 36px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+}
+
+.landing-footer p {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.footer-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px 16px;
+    margin-bottom: 8px;
+}
+
+.footer-col h3 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text, #dde3f0);
+    margin: 0 0 6px;
+}
+
+.footer-col a {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-dim, #6b7a99);
+    text-decoration: none;
+    padding: 2px 0;
+    transition: color 0.15s;
+}
+
+.footer-col a:hover {
+    color: var(--accent, #4f8ef7);
+}
+
+/* ── Tool page footer ────────────────────────────────────────── */
+
+.tool-footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid var(--border, #2a3050);
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-dim, #6b7a99);
+}
+
+.tool-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 14px;
+    margin-bottom: 12px;
+}
+
+.tool-footer nav a {
+    color: var(--text-dim, #6b7a99);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.tool-footer nav a:hover {
+    color: var(--accent, #4f8ef7);
+}
+
+.tool-footer p {
+    margin: 0;
+}
+
+/* ── Fixed brand logo — top-left corner, every page ───────────── */
+
+/*
+   Two-step background removal (no transparent PNG needed):
+     1. filter:invert(1)        → white-bg becomes black, brand
+                                   darks become light/white
+     2. mix-blend-mode:screen   → black (ex-white-bg) screened
+                                   against the dark page ≈ invisible;
+                                   light elements remain bright & visible
+*/
+
+.logo-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 300;
+    display: block;
+    line-height: 0;
+    text-decoration: none;
+    padding: 8px 18px 10px;
+    /* Barely-there frosted backdrop — anchors the logo visually
+     if it ever overlaps colourful content */
+    background: rgba(13, 17, 23, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom-right-radius: 14px;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background .2s;
+}
+
+.logo-fixed:hover {
+    background: rgba(13, 17, 23, 0.82);
+}
+
+.logo-fixed img {
+    height: 36px;
+    width: auto;
+    display: block;
+    /* transparent PNG — no filter tricks needed */
+    transition: opacity .2s;
+}
+
+.logo-fixed:hover img {
+    opacity: 0.82;
+}
+
+/* tiny home-icon badge on the logo */
+
+.logo-fixed::after {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234fc3f7' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E");
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: rgba(13, 17, 23, 0.85);
+    border: 1px solid rgba(79, 195, 247, .35);
+    border-radius: 4px;
+    opacity: 0.65;
+    transition: opacity .18s;
+}
+
+.logo-fixed:hover::after {
+    opacity: 1;
+}
+
+/* The bar is the first row of the page, so it must clear the fixed logo
+   (77 px wide on desktop) whenever #app's left edge is under it:
+   #app is 1180 px wide, so that is every viewport below ~1340 px. */
+
+.site-nav {
+    padding-left: 10px;
+}
+
+@media (max-width: 1340px) {
+    .site-nav:not(.site-nav--hub) {
+        padding-left: 70px;
+    }
+}
+
+/* Small screens: the full-size logo (36 px + padding ≈ 72×54 px) sat on top of
+   the first content row. Compact it, drop the home badge, and indent the
+   related.js breadcrumb past its footprint (that nav carries inline padding,
+   so the override needs !important). */
+
+@media (max-width: 600px) {
+    .logo-fixed {
+        padding: 5px 10px 7px;
+    }
+    .logo-fixed img {
+        height: 26px;
+    }
+    .logo-fixed::after {
+        display: none;
+    }
+    /* clear the fixed logo */
+    .site-nav:not(.site-nav--hub) {
+        padding-left: 54px;
+    }
+}
+
+/* ── SEO content sections (About / How-to-use articles) ────────── */
+
+.seo-about,
+.seo-article {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 36px;
+    margin: 32px 0 0;
+}
+
+.seo-about h2,
+.seo-article h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.seo-about h3,
+.seo-article h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 22px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+}
+
+.seo-about p,
+.seo-article p {
+    font-size: 0.875rem;
+    color: var(--text-dim);
+    line-height: 1.78;
+    margin: 0 0 10px;
+}
+
+.seo-about ul,
+.seo-article ul {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.seo-about li,
+.seo-article li {
+    font-size: 0.875rem;
+    color: var(--text-dim);
+    line-height: 1.65;
+    padding-left: 18px;
+    position: relative;
+}
+
+.seo-about li::before,
+.seo-article li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.seo-about strong,
+.seo-article strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .seo-about,
+    .seo-article {
+        padding: 22px 18px;
+    }
+}
+
+/* ── Developer card ───────────────────────────────────────────── */
+
+.dev-card {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin: 24px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* LinkedIn-to-accent gradient top stripe */
+
+.dev-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0a66c2 0%, #4f8ef7 55%, #a78bfa 100%);
+}
+
+.dev-photo-wrap {
+    flex-shrink: 0;
+}
+
+.dev-photo {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    border: 3px solid #0a66c2;
+    box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.20), 0 4px 20px rgba(10, 102, 194, 0.25);
+    display: block;
+}
+
+.dev-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.dev-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+}
+
+.dev-name {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.dev-title {
+    font-size: 0.83rem;
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.dev-degree {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+.dev-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.dev-tags span {
+    font-size: 0.63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+}
+
+.dev-linkedin {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 18px;
+    background: #0a66c2;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 700;
+    width: fit-content;
+    transition: background .18s, box-shadow .18s, transform .18s;
+}
+
+.dev-linkedin:hover {
+    background: #004182;
+    box-shadow: 0 4px 18px rgba(10, 102, 194, 0.40);
+    transform: translateY(-1px);
+}
+
+.dev-linkedin svg {
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .dev-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 22px 18px;
+        gap: 16px;
+    }
+    .dev-photo {
+        width: 76px;
+        height: 76px;
+    }
+}
+
+/* ── Social share bar (injected by related.js on tool pages) ──── */
+
+.share-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 0;
+    padding: 16px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+}
+
+.share-bar-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-dim);
+    margin-right: 4px;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .18s, box-shadow .18s, filter .18s;
+    position: relative;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px) scale(1.08);
+    filter: brightness(1.12);
+}
+
+.share-btn:active {
+    transform: scale(0.95);
+}
+
+.share-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: #fff;
+}
+
+.share-btn--wa {
+    background: #25d366;
+}
+
+.share-btn--wa:hover {
+    box-shadow: 0 4px 16px rgba(37, 211, 102, .4);
+}
+
+.share-btn--fb {
+    background: #1877f2;
+}
+
+.share-btn--fb:hover {
+    box-shadow: 0 4px 16px rgba(24, 119, 242, .4);
+}
+
+.share-btn--li {
+    background: #0a66c2;
+}
+
+.share-btn--li:hover {
+    box-shadow: 0 4px 16px rgba(10, 102, 194, .4);
+}
+
+.share-btn--tw {
+    background: #000;
+}
+
+.share-btn--tw:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
+}
+
+.share-btn--copy {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+}
+
+.share-btn--copy:hover {
+    box-shadow: 0 4px 16px rgba(79, 142, 247, .25);
+}
+
+.share-btn--qr {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+}
+
+.share-btn--qr:hover {
+    box-shadow: 0 4px 16px rgba(79, 142, 247, .25);
+}
+
+.share-btn--qr svg {
+    fill: var(--text-dim);
+    width: 18px;
+    height: 18px;
+}
+
+.share-btn--copy svg {
+    fill: var(--text-dim);
+    width: 18px;
+    height: 18px;
+}
+
+/* "Copied!" tooltip */
+
+.share-btn--copy .share-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: var(--green, #3ddc84);
+    color: #0d1117;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+}
+
+.share-btn--copy .share-tooltip.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+@media (max-width: 480px) {
+    .share-bar {
+        padding: 12px 14px;
+        gap: 8px;
+    }
+    .share-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+    .share-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+    .share-bar-label {
+        font-size: 0.68rem;
+        width: 100%;
+        margin-bottom: 2px;
+    }
+}
+
+/* ── SEO article internal links ──────────────────────────── */
+
+.seo-article a {
+    color: #58a6ff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    transition: color 0.15s;
+}
+
+.seo-article a:hover {
+    color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   USER GUIDE — Inline expandable <details> sections
+   Placed between share bar and SEO article. 100% indexable by Google.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.user-guide {
+    background: var(--surface, #161b27);
+    border: 1px solid var(--border, #2a3050);
+    border-radius: var(--radius, 12px);
+    padding: 24px 28px;
+    scroll-margin-top: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle top accent stripe */
+
+.user-guide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent, #4f8ef7), transparent 70%);
+    border-radius: var(--radius, 12px) var(--radius, 12px) 0 0;
+}
+
+.user-guide-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text, #dde3f0);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border, #2a3050);
+}
+
+.user-guide-title svg {
+    flex-shrink: 0;
+    color: var(--accent, #4f8ef7);
+    filter: drop-shadow(0 0 4px rgba(79, 142, 247, .3));
+}
+
+.user-guide-title .guide-icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent, #4f8ef7), rgba(79, 142, 247, .4));
+    color: #fff;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* ── Individual section (native <details>) ── */
+
+.user-guide details {
+    border: 1px solid var(--border, #2a3050);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: var(--bg, #0d1117);
+    transition: background .2s, border-color .2s, box-shadow .2s;
+}
+
+.user-guide details:hover {
+    border-color: rgba(79, 142, 247, .25);
+}
+
+.user-guide details[open] {
+    background: rgba(79, 142, 247, .03);
+    border-color: rgba(79, 142, 247, .2);
+    margin-bottom: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .15), inset 0 1px 0 rgba(79, 142, 247, .08);
+}
+
+.user-guide summary {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text, #dde3f0);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color .15s, background .15s;
+    border-radius: 10px;
+    user-select: none;
+}
+
+.user-guide summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Arrow indicator */
+
+.user-guide summary::after {
+    content: '';
+    margin-left: auto;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' viewBox='0 0 18 18'%3E%3Cpath d='M6.5 4.5L11.5 9 6.5 13.5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform .25s ease, filter .2s;
+}
+
+.user-guide details[open]>summary::after {
+    transform: rotate(90deg);
+    filter: brightness(1.5);
+}
+
+.user-guide summary:hover {
+    background: rgba(255, 255, 255, .025);
+    color: var(--accent, #4f8ef7);
+}
+
+.user-guide summary:hover::after {
+    filter: brightness(1.8);
+}
+
+/* Section number badge */
+
+.user-guide summary .guide-section-num {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent, #4f8ef7);
+    background: rgba(79, 142, 247, .12);
+    border: 1px solid rgba(79, 142, 247, .18);
+    padding: 3px 8px;
+    border-radius: 6px;
+    min-width: 24px;
+    text-align: center;
+    line-height: 1.2;
+    transition: background .2s, color .2s;
+}
+
+.user-guide details[open]>summary .guide-section-num {
+    background: var(--accent, #4f8ef7);
+    color: #fff;
+    border-color: transparent;
+}
+
+/* ── Section content ── */
+
+.user-guide .guide-content {
+    padding: 2px 18px 18px 52px;
+    font-size: 0.84rem;
+    line-height: 1.75;
+    color: var(--text-dim, #6b7a99);
+    border-top: 1px solid var(--border, #2a3050);
+    margin: 0 12px;
+}
+
+.user-guide .guide-content p {
+    margin: 8px 0;
+}
+
+.user-guide .guide-content strong {
+    color: var(--text, #dde3f0);
+    font-weight: 600;
+}
+
+.user-guide .guide-content ul,
+.user-guide .guide-content ol {
+    padding-left: 18px;
+    margin: 6px 0 10px;
+}
+
+.user-guide .guide-content li {
+    margin-bottom: 5px;
+    padding-left: 2px;
+}
+
+.user-guide .guide-content li::marker {
+    color: var(--accent, #4f8ef7);
+}
+
+/* Tables inside guide */
+
+.user-guide .guide-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 14px;
+    font-size: 0.82rem;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border, #2a3050);
+}
+
+.user-guide .guide-content th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border, #2a3050);
+    color: var(--accent, #4f8ef7);
+    font-weight: 700;
+    background: var(--bg, #0d1117);
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.user-guide .guide-content td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(42, 48, 80, .5);
+}
+
+.user-guide .guide-content tr:hover td {
+    background: rgba(79, 142, 247, .04);
+}
+
+/* Inline code & keyboard shortcuts */
+
+.user-guide .guide-content kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--bg, #0d1117);
+    border: 1px solid var(--border, #2a3050);
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: var(--text, #dde3f0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+}
+
+.user-guide .guide-content code {
+    background: rgba(79, 142, 247, .08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--accent, #4f8ef7);
+    border: 1px solid rgba(79, 142, 247, .12);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+    .user-guide {
+        padding: 16px 18px;
+    }
+    .user-guide summary {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+    }
+    .user-guide .guide-content {
+        padding: 2px 14px 14px 38px;
+    }
+}
+
+@media (max-width: 500px) {
+    .user-guide {
+        padding: 12px 14px;
+    }
+    .user-guide-title {
+        font-size: 0.98rem;
+        gap: 8px;
+    }
+    .user-guide-title .guide-icon-badge {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85rem;
+    }
+    .user-guide summary {
+        padding: 9px 12px;
+        font-size: 0.82rem;
+        gap: 8px;
+    }
+    .user-guide summary .guide-section-num {
+        padding: 2px 6px;
+        font-size: 0.68rem;
+        min-width: 20px;
+    }
+    .user-guide .guide-content {
+        padding: 2px 10px 12px 28px;
+        font-size: 0.8rem;
+    }
+    .user-guide .guide-content table {
+        font-size: 0.76rem;
+    }
+}
+
+/* ── Report-Issue Button (share bar) ──────────────────────── */
+
+.btn-report {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    height: 40px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: #f5c842;
+    color: #1a1a2e;
+    text-decoration: none;
+    transition: filter .18s;
+    white-space: nowrap;
+}
+
+.btn-report:hover {
+    filter: brightness(1.1);
+}
+
+.btn-report .btn-report-icon {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .btn-report {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 8px;
+        font-size: 0;
+    }
+    .btn-report .btn-report-icon {
+        display: inline;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1;
+    }
+}
+
+/* ── Site Footer ─────────────────────────────────────────────── */
+
+.site-footer {
+    margin-top: 48px;
+    padding: 20px 16px;
+    border-top: 1px solid var(--border, #2a3050);
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-dim, #6b7a99);
+}
+
+.site-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+    margin-bottom: 10px;
+}
+
+.site-footer-nav a {
+    color: var(--text-dim, #6b7a99);
+    text-decoration: none;
+    transition: color .15s;
+}
+
+.site-footer-nav a:hover {
+    color: var(--accent, #4f8ef7);
+}
+
+.site-footer-copy {
+    font-size: 0.68rem;
+    color: var(--text-dim, #6b7a99);
+}
+
+/* ── Cookie Notice Banner ────────────────────────────────────── */
+
+#cookie-notice {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: #161b27;
+    border-top: 1px solid var(--border, #2a3050);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-dim, #6b7a99);
+}
+
+#cookie-notice a {
+    color: var(--accent, #4f8ef7);
+    text-decoration: underline;
+}
+
+#cookie-notice-btn {
+    background: var(--accent, #4f8ef7);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#cookie-notice-btn:hover {
+    filter: brightness(1.1);
+}
+
+/* ──────────────────────────────────────────────────────────
+   Author byline (E-E-A-T signal block for every article/tool)
+   ────────────────────────────────────────────────────────── */
+
+.author-byline {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 24px 0;
+    padding: 14px 16px;
+    background: var(--surface, #161b22);
+    border: 1px solid var(--border, #2a3050);
+    border-left: 3px solid var(--accent, #4f8ef7);
+    border-radius: 10px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.author-byline .byline-photo-link {
+    flex-shrink: 0;
+    display: block;
+    line-height: 0;
+}
+
+.author-byline img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--border, #2a3050);
+    display: block;
+}
+
+.author-byline .byline-text {
+    min-width: 0;
+}
+
+.author-byline .byline-row1 {
+    font-weight: 600;
+    color: var(--text, #e6edf3);
+}
+
+.author-byline .byline-row1 a {
+    color: var(--accent, #4f8ef7);
+    text-decoration: none;
+}
+
+.author-byline .byline-row1 a:hover {
+    text-decoration: underline;
+}
+
+.author-byline .byline-row2 {
+    color: var(--text-dim, #8b95b3);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+.author-byline .byline-row3 {
+    color: var(--text-dim, #8b95b3);
+    font-size: 0.76rem;
+    margin-top: 4px;
+}
+
+.author-byline .byline-row3 a {
+    color: var(--text-dim, #8b95b3);
+    text-decoration: underline;
+}
+
+.author-byline .byline-row3 a:hover {
+    color: var(--accent, #4f8ef7);
+}
+
+@media (max-width:500px) {
+    .author-byline {
+        padding: 12px;
+        gap: 10px;
+    }
+    .author-byline img {
+        width: 40px;
+        height: 40px;
+    }
+    .author-byline .byline-row1 {
+        font-size: 0.82rem;
+    }
+}
+
+/* ──────────────────────────────────────────────────────────
+   Further-reading callout — links each tool to its blog guide
+   (hub-and-spoke signal for topical clustering)
+   ────────────────────────────────────────────────────────── */
+
+.further-reading {
+    display: block;
+    margin: 28px 0 16px 0;
+    padding: 14px 18px;
+    background: var(--surface, #161b22);
+    border: 1px solid var(--border, #2a3050);
+    border-left: 3px solid var(--accent, #4f8ef7);
+    border-radius: 10px;
+}
+
+.further-reading p {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--text-dim, #b3becf);
+}
+
+.further-reading a {
+    color: var(--accent, #4f8ef7);
+    text-decoration: none;
+}
+
+.further-reading a:hover {
+    text-decoration: underline;
+}
+
+.further-reading strong {
+    color: var(--text, #e6edf3);
+}
+
+@media (max-width:500px) {
+    .further-reading {
+        padding: 12px 14px;
+    }
+    .further-reading p {
+        font-size: 0.86rem;
+    }
+}
+
+/* ─── AdSense ad slots ────────────────────────────────────── */
+
+.ad-slot {
+    display: block;
+    margin: 12px auto;
+    text-align: center;
+    min-height: 90px;
+}
+
+.ad-slot.ad-above-canvas {
+    min-height: 90px;
+}
+
+.ad-slot.ad-below-canvas {
+    min-height: 90px;
+}
+
+@media (max-width: 767px) {
+    .ad-slot.ad-above-canvas {
+        min-height: 50px;
+    }
+    .ad-slot.ad-below-canvas {
+        min-height: 0;
+    }
+}
+
+/* desktop-only slots (kept for restore compatibility — currently no
+   Slot 2 wrapper on any tool page, but restore_slot2.py re-injects the
+   .desktop-only wrapper if Slot 2 is ever brought back). */
+
+@media (max-width: 767px) {
+    .ad-slot.desktop-only {
+        display: none !important;
+    }
+}
+
+/* Show the right viewport <ins> — !important needed to beat AdSense's inline style="display:inline-block" */
+
+.ad-slot .ad-desktop {
+    display: inline-block !important;
+}
+
+.ad-slot .ad-mobile {
+    display: none !important;
+}
+
+@media (max-width: 767px) {
+    .ad-slot .ad-desktop {
+        display: none !important;
+    }
+    .ad-slot .ad-mobile {
+        display: inline-block !important;
+    }
+}
+
+/* Collapse unfilled slots (officially supported via data-ad-status) */
+
+ins.adsbygoogle[data-ad-status="unfilled"] {
+    display: none !important;
+}
+
+.ad-slot:has(>ins.adsbygoogle[data-ad-status="unfilled"]):not(:has(>ins.adsbygoogle[data-ad-status="filled"])) {
+    display: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+}
+
+/* ─── AdSense In-feed native card (homepage, category, related strip) ───
+   Default state = visually invisible (no border, no background). AdSense JS
+   needs the slot in the DOM with width to render, but we don't show any
+   "blank tile" styling until the slot is actually filled.
+   - data-ad-status="filled"   → restore card border + surface
+   - data-ad-status="unfilled" → collapse entirely
+   - no status (still loading or AdSense never reached it) → invisible, but
+     still occupies width. A 3.5 s JS fallback in shared/ads-collapse.js
+     marks any still-unprocessed slot as "unfilled" so it collapses too. */
+
+.tool-card.ad-card {
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius);
+    overflow: hidden;
+    /* Reserve height so AdSense's auction sees a fillable slot, not a 1-px
+     "hidden" surface. Without this the In-feed unit never gets filled
+     (Google declines fluid/native ads into slots without usable height). */
+    min-height: 280px;
+}
+
+.tool-card.ad-card>ins.adsbygoogle {
+    display: block;
+    width: 100%;
+    min-height: 240px;
+    /* AdSense needs a height hint for fluid format */
+}
+
+/* Width MUST be >= 250px on every viewport — Google rejects fluid
+   responsive ads at availableWidth < 250 with:
+   "TagError: Fluid responsive ads must be at least 250px wide".
+   The ad card is therefore slightly wider than the organic tool cards
+   (230/200/175 px) — visually fine, and gets accepted by AdSense. */
+
+.row-track .tool-card.ad-card {
+    flex: 0 0 260px;
+    width: 260px;
+}
+
+@media (max-width: 768px) {
+    .row-track .tool-card.ad-card {
+        flex: 0 0 260px;
+        width: 260px;
+    }
+}
+
+@media (max-width: 480px) {
+    .row-track .tool-card.ad-card {
+        flex: 0 0 260px;
+        width: 260px;
+    }
+}
+
+.related-track .tool-card.ad-card {
+    flex: 0 0 260px;
+    width: 260px;
+}
+
+@media (max-width: 600px) {
+    .related-track .tool-card.ad-card {
+        flex: 0 0 260px;
+        width: 260px;
+    }
+}
+
+@media (max-width: 380px) {
+    .related-track .tool-card.ad-card {
+        flex: 0 0 260px;
+        width: 260px;
+    }
+}
+
+/* When filled, restore card chrome so the ad reads as a card */
+
+.tool-card.ad-card:has(>ins.adsbygoogle[data-ad-status="filled"]) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+/* When explicitly unfilled, collapse the whole card */
+
+.tool-card.ad-card:has(>ins.adsbygoogle[data-ad-status="unfilled"]) {
+    display: none !important;
+}
+
+/* ─── AdSense In-article ad (blog posts only) ──────────────────
+   Sits between <section>/<h2> blocks inside .blog-article. Fluid
+   format — AdSense sizes the slot itself. Collapses cleanly when
+   unfilled (same pattern as ad-card). */
+
+.ad-in-article {
+    margin: 24px auto;
+    text-align: center;
+    max-width: 100%;
+    /* Reserve height so AdSense's auction sees a fillable slot. Without this
+     the in-article unit fills only opportunistically (7-11 imp/day on the
+     full blog) because Google declines fluid ads into 0-height surfaces. */
+    min-height: 280px;
+}
+
+.ad-in-article>ins.adsbygoogle {
+    display: block;
+    min-height: 250px;
+    /* fluid format needs a height hint */
+}
+
+.ad-in-article:has(>ins.adsbygoogle[data-ad-status="unfilled"]) {
+    display: none !important;
+    margin: 0 !important;
+}
+
+/* "Share your circuit" button — collapse the trailing words to just "🔗 Share" on
+   narrow toolbars so it doesn't crowd Save/Load/Export on phones. */
+
+@media (max-width: 640px) {
+    .btn-share-ext {
+        display: none;
+    }
+}
+
+/* A <select>'s intrinsic MINIMUM width is set by its longest option, and a
+   flex or grid item will not shrink below its min-content width. So one
+   long option name can force a control row wider than the phone it is on:
+   stefan-boltzmann's 23-material picker ran 40px off a 390px viewport that
+   way, taking the page's horizontal scroll with it. Let selects shrink —
+   the themed list below is measured from the control, so a control that
+   fits the screen gets a list that fits the screen.
+
+   The floor is `min(100%, 5em)`, not 0: plain `min-width: 0` let a select in
+   a tight flex row collapse to 14px (bernoullis-principle's speed picker).
+   `100%` resolves against the container, so the floor can never be the thing
+   that overflows it. */
+
+select {
+    min-width: min(100%, 5em);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   THEMED SELECT LIST  —  drawn by shared/themed-select.js
+   The closed control is still the tool's own <select>; only the open
+   list is ours, so this styles nothing but the popup.
+   ══════════════════════════════════════════════════════════════════ */
+
+.ts-pop {
+    position: fixed;
+    z-index: 4000;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--surface, #161b27);
+    border: 1px solid var(--border, #2a3050);
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .35);
+    font-family: var(--font, 'Segoe UI', system-ui, sans-serif);
+    animation: tsPop .12s ease-out;
+}
+
+@keyframes tsPop {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.ts-pop.is-up {
+    animation-name: tsPopUp;
+}
+
+@keyframes tsPopUp {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.ts-group {
+    font-size: .58rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-dim, #6b7a99);
+    padding: 9px 9px 4px;
+}
+
+.ts-group:first-child {
+    padding-top: 4px;
+}
+
+/* colour-coded groups (data-color on <optgroup>): header text and a bar on each row */
+
+.ts-group[style*="--ts-c"] {
+    color: var(--ts-c);
+}
+
+.ts-opt[style*="--ts-c"] {
+    box-shadow: inset 3px 0 0 var(--ts-c);
+}
+
+.ts-opt {
+    position: relative;
+    padding: 8px 9px 8px 24px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-dim, #6b7a99);
+    /* wraps rather than overflowing: the list is only ever as wide as its
+     control, so a long option has to go somewhere */
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.ts-opt.is-active {
+    background: var(--surface2, #1f2535);
+    color: var(--text, #dde3f0);
+}
+
+.ts-opt.is-current {
+    color: var(--accent, #4f8ef7);
+}
+
+.ts-opt.is-current::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 15px;
+    width: 5px;
+    height: 9px;
+    margin-top: -6px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+}
+
+.ts-opt.is-off {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* A narrow control gets a narrow list, so the check-mark gutter would cost
+   it half its width. Drop the gutter and let colour carry the selection. */
+
+.ts-pop.is-narrow .ts-opt {
+    padding-left: 9px;
+    text-align: center;
+}
+
+.ts-pop.is-narrow .ts-opt.is-current::before {
+    display: none;
+}
+
+.ts-pop.is-narrow .ts-opt.is-current {
+    font-weight: 800;
+}
+
+.ts-pop::-webkit-scrollbar {
+    width: 9px;
+}
+
+.ts-pop::-webkit-scrollbar-thumb {
+    background: var(--border, #2a3050);
+    border-radius: 6px;
+    border: 2px solid var(--surface, #161b27);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ts-pop {
+        animation: none;
+    }
+}
+
+/* ── Header related-tool links (.head-actions) ─────────────────────────
+   Every tool carries 3 related-tool links in its header (4 on the 15
+   busiest), chosen from GA4 navigation data — see the 2026-10-04 internal
+   link audit. These rules keep that row from breaking the banner:
+   measured over all 144 tools, the action row stays on ONE line at 820,
+   1024 and 1280 px, and at 375 px fewer bars wrap than before the change.
+   - The header row's Share button is "🔗 Share" (its title says the rest);
+     the trailing words were the widest thing in the row.
+   - Tablet (561–1099 px): links 3+ go icon-only. Their title and
+     aria-label still name the tool; the first two stay labelled.
+   - Phone (≤ 560 px): every tool already hides the labels; this only
+     tightens the spacing so the User Guide button stays on the same line.
+   `div.head-actions` outranks each tool's own rules, which load AFTER
+   this file (equal specificity would lose to them on source order). */
+
+div.head-actions {
+    gap: 6px;
+}
+
+div.head-actions .btn-link {
+    padding: 5px 9px;
+    gap: 6px;
+    font-size: .8rem;
+}
+
+div.head-actions .btn-share-ext {
+    display: none;
+}
+
+@media (min-width: 561px) and (max-width: 1099px) {
+    div.head-actions .btn-link:nth-of-type(n+3) .lbl {
+        display: none;
+    }
+    div.head-actions .btn-link:nth-of-type(n+3) {
+        padding: 5px 8px;
+    }
+}
+
+@media (max-width: 560px) {
+    div.head-actions {
+        gap: 4px;
+    }
+    div.head-actions .btn-link {
+        padding: 5px 7px;
+    }
+    div.head-actions .btn-guide {
+        padding: 6px 10px !important;
+    }
+}
+
+/* ── "Related Simulators" strip (tool pages) ──────────────────────
+   Moved here from shared/related.js so a strip written into the HTML by
+   deploy/build-related.js is styled before any script runs. */
+
+.related-section {
+    margin: 48px 0 24px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border, #2a3050)
+}
+
+.related-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap
+}
+
+.related-title {
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text, #dde3f0)
+}
+
+.related-count {
+    font-size: .65rem;
+    font-weight: 700;
+    color: var(--text-dim, #6b7a99);
+    background: var(--surface2, #1f2535);
+    border: 1px solid var(--border, #2a3050);
+    padding: 2px 8px;
+    border-radius: 12px
+}
+
+.related-track {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border, #2a3050) transparent;
+    padding-right: 20px
+}
+
+.related-track::-webkit-scrollbar {
+    height: 3px
+}
+
+.related-track::-webkit-scrollbar-track {
+    background: transparent
+}
+
+.related-track::-webkit-scrollbar-thumb {
+    background: var(--border, #2a3050);
+    border-radius: 2px
+}
+
+.related-track .tool-card {
+    flex: 0 0 210px;
+    width: 210px;
+    animation: none;
+    scroll-snap-align: start;
+    font-size: .88em
+}
+
+.related-track .tool-card-thumb {
+    height: 90px
+}
+
+.related-track .tool-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    max-height: none
+}
+
+@media(max-width:600px) {
+    .related-track .tool-card {
+        flex: 0 0 180px;
+        width: 180px
+    }
+}
+
+@media(max-width:380px) {
+    .related-track .tool-card {
+        flex: 0 0 160px;
+        width: 160px
+    }
+}

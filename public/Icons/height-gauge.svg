@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="120" height="140">
+  <!-- Background -->
+  <rect width="120" height="140" rx="10" fill="#1a1f2e"/>
+
+  <!-- Surface plate / base plate -->
+  <rect x="8" y="120" width="104" height="12" rx="3" fill="#607d8b"/>
+  <rect x="8" y="120" width="104" height="3" rx="0" fill="#90a4ae"/>
+
+  <!-- Column (vertical beam) -->
+  <rect x="58" y="18" width="14" height="106" rx="2" fill="#546e7a"/>
+  <!-- Column highlight -->
+  <rect x="59" y="18" width="4" height="106" rx="0" fill="#78909c"/>
+  <!-- Column top cap -->
+  <rect x="54" y="14" width="22" height="8" rx="3" fill="#607d8b"/>
+
+  <!-- Main scale ticks on column right side -->
+  <!-- 10mm major ticks -->
+  <line x1="72" y1="28"  x2="84" y2="28"  stroke="#b0bec5" stroke-width="1.5"/>
+  <line x1="72" y1="44"  x2="84" y2="44"  stroke="#b0bec5" stroke-width="1.5"/>
+  <line x1="72" y1="60"  x2="84" y2="60"  stroke="#b0bec5" stroke-width="1.5"/>
+  <line x1="72" y1="76"  x2="84" y2="76"  stroke="#b0bec5" stroke-width="1.5"/>
+  <line x1="72" y1="92"  x2="84" y2="92"  stroke="#b0bec5" stroke-width="1.5"/>
+  <line x1="72" y1="108" x2="84" y2="108" stroke="#b0bec5" stroke-width="1.5"/>
+  <!-- 5mm medium ticks -->
+  <line x1="72" y1="36"  x2="80" y2="36"  stroke="#78909c" stroke-width="1"/>
+  <line x1="72" y1="52"  x2="80" y2="52"  stroke="#78909c" stroke-width="1"/>
+  <line x1="72" y1="68"  x2="80" y2="68"  stroke="#78909c" stroke-width="1"/>
+  <line x1="72" y1="84"  x2="80" y2="84"  stroke="#78909c" stroke-width="1"/>
+  <line x1="72" y1="100" x2="80" y2="100" stroke="#78909c" stroke-width="1"/>
+
+  <!-- Carriage body -->
+  <rect x="42" y="56" width="66" height="28" rx="4" fill="#37474f"/>
+  <!-- Carriage top highlight -->
+  <rect x="42" y="56" width="66" height="4" rx="2" fill="#546e7a"/>
+
+  <!-- Zero reference line (cyan) on carriage -->
+  <line x1="72" y1="70" x2="105" y2="70" stroke="#4fc3f7" stroke-width="1.8"/>
+
+  <!-- Vernier scale window on carriage right -->
+  <rect x="90" y="57" width="16" height="26" rx="2" fill="#263238"/>
+  <!-- Vernier ticks in window -->
+  <line x1="90" y1="61"  x2="100" y2="61"  stroke="#90a4ae" stroke-width="0.8"/>
+  <line x1="90" y1="65"  x2="103" y2="65"  stroke="#90a4ae" stroke-width="0.8"/>
+  <line x1="90" y1="69"  x2="106" y2="69"  stroke="#4fc3f7" stroke-width="1.5"/>
+  <line x1="90" y1="73"  x2="103" y2="73"  stroke="#90a4ae" stroke-width="0.8"/>
+  <line x1="90" y1="77"  x2="100" y2="77"  stroke="#90a4ae" stroke-width="0.8"/>
+
+  <!-- Scriber arm (horizontal, pointing left) -->
+  <rect x="14" y="67" width="42" height="6" rx="2" fill="#4fc3f7"/>
+  <!-- Scriber tip point -->
+  <polygon points="14,70 20,66 20,74" fill="#29b6f6"/>
+  <!-- Scriber arm shadow/depth -->
+  <rect x="14" y="67" width="42" height="2" rx="0" fill="#81d4fa"/>
+
+  <!-- Height dimension arrow (left side) -->
+  <line x1="10" y1="120" x2="10" y2="70" stroke="#4fc3f7" stroke-width="1" stroke-dasharray="3,2"/>
+  <!-- Arrow head up -->
+  <polygon points="10,70 7,77 13,77" fill="#4fc3f7"/>
+  <!-- Arrow head down -->
+  <polygon points="10,120 7,113 13,113" fill="#4fc3f7"/>
+
+  <!-- Label -->
+  <text x="60" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#90a4ae" font-weight="bold">HEIGHT GAUGE</text>
+</svg>

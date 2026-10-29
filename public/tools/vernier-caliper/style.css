@@ -1,0 +1,2738 @@
+/* ── Reset & Tokens ───────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #0d1117;
+    --surface: #161b27;
+    --surface2: #1f2535;
+    --border: #2a3050;
+    --accent: #4f8ef7;
+    --accent-lo: rgba(79, 142, 247, .22);
+    --green: #3ddc84;
+    --red: #ff5555;
+    --gold: #f5c842;
+    --text: #dde3f0;
+    --text-dim: #6b7a99;
+    --font: 'Segoe UI', system-ui, sans-serif;
+    --mono: 'Courier New', monospace;
+    --radius: 12px;
+    /* cell accent colours */
+    --msr: #4fc3f7;
+    --vsr: #81c784;
+    --lc: #ffb74d;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 20px 16px 36px;
+}
+
+#app {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+
+header {
+    text-align: center;
+    padding: 4px 0;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(120deg, #4f8ef7 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-top: 3px;
+}
+
+/* ── Controls bar ────────────────────────────────────────────────── */
+
+.controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ctrl-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+
+.pill-tabs {
+    display: flex;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.pill {
+    padding: 5px 13px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.81rem;
+    transition: background .18s, color .18s, box-shadow .18s;
+}
+
+.pill.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 12px var(--accent-lo);
+}
+
+.pill:hover:not(.active) {
+    background: var(--surface2);
+    color: var(--text);
+}
+
+/* ── Caliper canvas ──────────────────────────────────────────────── */
+
+.canvas-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    cursor: grab;
+    overflow-x: clip;
+}
+
+.canvas-card:active {
+    cursor: grabbing;
+}
+
+#caliper {
+    display: block;
+    margin: 0 auto;
+    touch-action: pan-y;
+    width: 100%;
+    height: auto;
+    max-width: 923px;
+}
+
+/* Bottom-LEFT, not bottom-right: that corner belongs to the action buttons, and
+   the hint was sitting underneath them with its tail poking out past the last
+   one — which reads as a button bleeding off the canvas. Left also puts it
+   beside the jaw it is talking about, with its arrow pointing the way the jaw
+   travels. */
+
+.drag-hint {
+    position: absolute;
+    bottom: 12px;
+    left: calc(16px + var(--cv-gutter));
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    pointer-events: none;
+    transition: opacity .4s;
+    max-width: calc(100% - 32px);
+    /* It sits over the fixed jaw's tip, so it carries its own plate or the jaw's
+     edge runs straight through the word "sliding". */
+    background: rgba(8, 12, 18, 0.78);
+    padding: 3px 9px;
+    border-radius: 6px;
+}
+
+.drag-hint.hidden {
+    opacity: 0;
+}
+
+/* ── Measure a real object: FAB + picker ─────────────────────────── */
+
+/* The canvas is capped at 923 px and centred, so once the card is wider than
+   that there is a gutter of bare card on each side. Anchoring these to the
+   card's right edge parked them in that gutter, outside the instrument — which
+   is what reads as a button bleeding off the canvas. --cv-gutter is that gap,
+   and every canvas overlay is offset by it so they stay on the metal. */
+
+.canvas-card {
+    --cv-gutter: max(0px, (100% - 20px - 923px) / 2);
+}
+
+.canvas-fabs {
+    position: absolute;
+    bottom: 12px;
+    z-index: 11;
+    right: calc(14px + var(--cv-gutter));
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.obj-fab {
+    position: static;
+    z-index: 11;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 14px 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .45);
+    transition: border-color .18s, background .18s, box-shadow .18s, color .18s;
+}
+
+.obj-fab:hover,
+.obj-fab.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 4px 18px var(--accent-lo);
+}
+
+.obj-fab.loaded {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.obj-fab-tip {
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Sized to sit INSIDE the canvas card: the max-height keeps it from ever
+   growing past the card, whatever the viewport. */
+
+.obj-picker {
+    position: absolute;
+    bottom: 60px;
+    right: 14px;
+    z-index: 20;
+    width: min(392px, calc(100% - 28px));
+    max-height: calc(100% - 74px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 10px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .6);
+}
+
+.obj-picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+.obj-picker-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.obj-picker-close:hover {
+    color: var(--text);
+}
+
+.obj-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.obj-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 7px 3px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+}
+
+.obj-tile svg {
+    width: 30px;
+    height: 28px;
+}
+
+.obj-tile:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+}
+
+.obj-tile:hover svg {
+    fill: var(--accent);
+}
+
+.obj-tile.active {
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(61, 220, 132, .2);
+}
+
+.obj-tile.active svg {
+    fill: var(--green);
+}
+
+.obj-tile-name {
+    font-size: 0.61rem;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Marks a part measured on the INSIDE jaws; the tooltip and the object bar
+   carry the wording. */
+
+.obj-tile-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--vsr);
+}
+
+.obj-none {
+    width: 100%;
+    margin-top: 7px;
+    padding: 6px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: color .18s, border-color .18s;
+}
+
+.obj-none:hover {
+    color: var(--red);
+    border-color: var(--red);
+}
+
+/* ── Loaded-workpiece status bar ─────────────────────────────────── */
+
+.obj-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ob-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ob-thumb {
+    width: 34px;
+    height: 32px;
+    flex: 0 0 auto;
+}
+
+.ob-id {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.ob-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.ob-what {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+}
+
+.ob-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    flex: 1 1 220px;
+}
+
+.ob-state {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ob-open {
+    background: rgba(255, 183, 77, .14);
+    color: var(--lc);
+}
+
+.ob-contact {
+    background: rgba(61, 220, 132, .14);
+    color: var(--green);
+}
+
+.ob-msg {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+}
+
+.ob-msg strong {
+    color: var(--text);
+    font-family: var(--mono);
+}
+
+.ob-actions {
+    display: flex;
+    gap: 7px;
+    margin-left: auto;
+}
+
+.ob-btn {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 0.74rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .18s, color .18s, opacity .18s;
+}
+
+.ob-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.ob-btn:disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+.ob-btn-x:hover {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+.ob-note {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+}
+
+.ob-note strong,
+.ob-note em {
+    color: var(--text);
+}
+
+.ob-lesson {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+    border-left: 3px solid var(--gold);
+    background: rgba(245, 200, 66, .07);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+}
+
+.ob-lesson strong {
+    color: var(--gold);
+}
+
+.ob-lesson strong+* {
+    color: var(--text);
+}
+
+/* ── Info row ────────────────────────────────────────────────────── */
+
+.info-row {
+    display: grid;
+    /* The three reading cells now carry the "numeral N + k div" bridge, which is
+     the longest string in the panel. Give them a floor so it stays on one line;
+     the TR box shrinks instead — its own lines are short. */
+    grid-template-columns: 156px minmax(310px, auto) 1fr;
+    gap: 12px;
+    align-items: stretch;
+}
+
+/* ── 1. Digital readout ──────────────────────────────────────────── */
+
+.digital-readout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #060a0e;
+    border: 2px solid #0f3320;
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    box-shadow: inset 0 0 24px rgba(0, 255, 65, .04), 0 0 16px rgba(0, 255, 65, .07);
+}
+
+.dr-label {
+    font-size: 0.65rem;
+    color: #1f5e35;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: 4px;
+}
+
+.dr-value {
+    font-family: var(--mono);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #00ff55;
+    text-shadow: 0 0 10px rgba(0, 255, 85, .55);
+    letter-spacing: .04em;
+    line-height: 1;
+}
+
+/* Practice input — styled as the LCD readout */
+
+.dr-input {
+    font-family: var(--mono);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #00ff55;
+    text-shadow: 0 0 10px rgba(0, 255, 85, .4);
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    text-align: center;
+    caret-color: #00ff55;
+    letter-spacing: .04em;
+    line-height: 1;
+    -moz-appearance: textfield;
+}
+
+.dr-input::-webkit-outer-spin-button,
+.dr-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+.dr-input::placeholder {
+    color: rgba(0, 255, 85, 0.25);
+}
+
+.dr-unit {
+    font-size: 0.72rem;
+    color: #2d8c4e;
+    margin-top: 5px;
+    letter-spacing: .06em;
+}
+
+/* Exact decimal equivalent of a fractional-inch reading. Deliberately
+   subordinate — dimmer and much smaller than the reading — so it can never be
+   mistaken for what the instrument says. Fractional imperial only. */
+
+.dr-equiv {
+    font-size: 0.68rem;
+    color: rgba(0, 255, 85, 0.42);
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}
+
+/* hide/show logic controlled in JS via .hidden class */
+
+.dr-input {
+    display: none;
+}
+
+.dr-value {
+    display: block;
+}
+
+/* ── 2. Reading cells: MSR / VSR / LC ────────────────────────────── */
+
+.reading-cells {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.rcell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 6px;
+    min-width: 72px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: filter .35s ease;
+}
+
+/* coloured top accent bar */
+
+.rcell::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 10px 10px 0 0;
+}
+
+.rcell-msr::before {
+    background: var(--msr);
+}
+
+.rcell-vsr::before {
+    background: var(--vsr);
+}
+
+.rcell-lc::before {
+    background: var(--lc);
+}
+
+.rcell-abbr {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-top: 2px;
+}
+
+.rcell-msr .rcell-abbr {
+    color: var(--msr);
+}
+
+.rcell-vsr .rcell-abbr {
+    color: var(--vsr);
+}
+
+.rcell-lc .rcell-abbr {
+    color: var(--lc);
+}
+
+.rcell-val {
+    font-family: var(--mono);
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin: 4px 0 2px;
+    /* Reserve the tallest value's box so a fractional-inch reading — which drops
+     to 1.15rem on MSR and LC while VSR stays 1.55rem — does not sit the three
+     numbers on three different lines. */
+    min-height: 1.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rcell-unit {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+}
+
+/* Fractional-inch readings ("3 15/16") are wider than any decimal reading, so
+   the LCD, the answer box and the MSR / LC cells drop one size in that mode. */
+
+.dr-value.frac,
+.dr-input.frac {
+    font-size: 1.5rem;
+    letter-spacing: .02em;
+}
+
+.rcell-val.frac {
+    font-size: 1.15rem;
+}
+
+/* Kept for screen readers only — the visible expansion lives in the TR legend
+   below, and duplicating it here is what pushed the three numbers out of line
+   (it wrapped to two lines in one cell and one in another). Out of flow, so it
+   contributes no height at any width. */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Where the VSR came from on the printed numerals. min-height reserves the line
+   so the tile does not change height as the jaw moves (and on the 0.1 mm scale,
+   where every division is numbered, the text is empty and the space stays). */
+
+.rcell-bridge {
+    font-size: 0.58rem;
+    color: var(--vsr);
+    opacity: 0.9;
+    margin-top: 3px;
+    letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+    /* Two lines are RESERVED in every cell, wrapped or not. The word "numeral" is
+     load-bearing — without it "= 4 + 3 div" reads as arithmetic that does not
+     make 23 — so the text cannot be shortened, and ellipsising it ("= numeral
+     20 + 4 …") loses the part that matters. Reserving the height everywhere
+     keeps the three numbers on one line whether it wraps or not. */
+    line-height: 1.3;
+    min-height: 1.55rem;
+    max-width: 100%;
+}
+
+/* blur in practice mode until revealed — the bridge names the coinciding
+   division, so it gives the answer away just as surely as the value does. */
+
+.cells-hidden .rcell-val,
+.cells-hidden .rcell-bridge {
+    filter: blur(7px);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ── 3. TR Formula ───────────────────────────────────────────────── */
+
+.tr-formula {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    transition: filter .35s ease;
+}
+
+.tr-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.tr-step {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+}
+
+.tr-step span {
+    color: var(--text);
+}
+
+.tr-result {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 0 8px rgba(245, 200, 66, .4);
+    margin-top: 2px;
+}
+
+.tr-unit {
+    font-size: 0.75rem;
+}
+
+.tr-equiv {
+    margin-top: 4px;
+    font-size: 0.76rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: pre-wrap;
+}
+
+/* blur formula in practice */
+
+.formula-hidden .tr-step,
+.formula-hidden .tr-result {
+    filter: blur(7px);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ── Zoom toggle button (inside caliper card) ────────────────────── */
+
+.zoom-toggle {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 10;
+    background: rgba(13, 17, 23, 0.80);
+    border: 1px solid rgba(79, 142, 247, 0.42);
+    color: #4f8ef7;
+    border-radius: 8px;
+    padding: 5px 13px;
+    /* 28px floor: 5+5 padding + 2 border left ~27px at this font size, under the
+     site's minimum tap target for every width <= 768px. */
+    min-height: 28px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s, box-shadow .18s, border-color .18s;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.zoom-toggle:hover {
+    background: rgba(30, 42, 70, 0.90);
+    box-shadow: 0 0 12px rgba(79, 142, 247, .28);
+}
+
+.zoom-toggle.active {
+    background: rgba(79, 142, 247, 0.20);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* Top-right canvas toolbar holding the Coincidence + Zoom toggles */
+
+.canvas-toolbar {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.canvas-toolbar .zoom-toggle {
+    position: static;
+    top: auto;
+    right: auto;
+}
+
+/* "Coincidence" toggle adopts a gold accent when active to match the line */
+
+.align-toggle.active {
+    background: rgba(255, 193, 7, 0.18);
+    border-color: #ffc107;
+    color: #ffd970;
+}
+
+.align-toggle:not(.active) {
+    color: #8b9dc3;
+    border-color: rgba(139, 157, 195, 0.42);
+}
+
+/* Beam-numbering segmented pair (mm | cm). Joined into one control so it reads
+   as a choice between two engravings rather than two unrelated toggles. */
+
+.beam-unit-wrap {
+    display: flex;
+}
+
+/* display:flex would otherwise beat the UA's [hidden] rule when in Imperial. */
+
+.beam-unit-wrap[hidden] {
+    display: none;
+}
+
+.seg-group {
+    display: flex;
+}
+
+.canvas-toolbar .seg-btn {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.seg-group .seg-btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right-width: 0;
+}
+
+.seg-group .seg-btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Locking screw toggle. Gold when engaged, to match the ring and the padlock
+   painted on the nut itself — the canvas and the toolbar say the same thing in
+   the same colour, which is what makes them read as one control. */
+
+.lock-toggle.active {
+    background: rgba(255, 193, 7, 0.20);
+    border-color: #ffc107;
+    color: #ffd970;
+}
+
+.lock-toggle:not(.active) {
+    color: #8b9dc3;
+    border-color: rgba(139, 157, 195, 0.42);
+}
+
+/* The inactive half must not read as disabled — both are legitimate engravings. */
+
+.seg-btn:not(.active) {
+    color: #8b9dc3;
+    border-color: rgba(139, 157, 195, 0.42);
+}
+
+.seg-btn.active {
+    background: rgba(79, 142, 247, 0.20);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+@media (max-width: 500px) {
+    .canvas-toolbar {
+        gap: 6px;
+    }
+    .canvas-toolbar .zoom-toggle {
+        padding: 5px 9px;
+        font-size: 0.72rem;
+    }
+}
+
+/* ── LC hint in precision label ──────────────────────────────────── */
+
+.lc-hint {
+    font-size: 0.65rem;
+    opacity: 0.65;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* ── Acronym legend inside TR formula box ────────────────────────── */
+
+.tr-legend {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px;
+    margin-bottom: 2px;
+}
+
+.trl-msr {
+    color: var(--msr);
+    font-weight: 700;
+}
+
+.trl-vsr {
+    color: var(--vsr);
+    font-weight: 700;
+}
+
+.trl-lc {
+    color: var(--lc);
+    font-weight: 700;
+}
+
+/* blur legend along with rest of formula in practice mode */
+
+.formula-hidden .tr-legend {
+    filter: blur(7px);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ── Practice bar ────────────────────────────────────────────────── */
+
+.practice-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+/* Buttons */
+
+.btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: filter .18s, box-shadow .18s, opacity .18s;
+}
+
+.btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+}
+
+.btn-primary:not(:disabled):hover {
+    filter: brightness(1.12);
+    box-shadow: 0 0 12px var(--accent-lo);
+}
+
+.btn-ghost {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+    background: var(--border);
+}
+
+/* Play button — animated green */
+
+.btn-play {
+    background: #1b4d2e;
+    color: #3ddc84;
+    border: 1px solid #2d8c4e;
+    font-size: 0.9rem;
+    min-width: 100px;
+}
+
+.btn-play:hover {
+    background: #1f5c35;
+    box-shadow: 0 0 14px rgba(61, 220, 132, .25);
+}
+
+.btn-play.playing {
+    background: #4d1b1b;
+    color: #ff6b6b;
+    border-color: #8c2d2d;
+    animation: pulse-red 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0%,
+    100% {
+        box-shadow: 0 0 0 rgba(255, 80, 80, 0);
+    }
+    50% {
+        box-shadow: 0 0 10px rgba(255, 80, 80, .45);
+    }
+}
+
+/* Practice: the second drill, sitting beside Play */
+
+.btn-obj {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 0.84rem;
+}
+
+.btn-obj:not(:disabled):hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.pbar-score {
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.pbar-score span {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.feedback {
+    font-size: 0.88rem;
+    font-weight: 600;
+    min-width: 0;
+}
+
+.feedback.ok {
+    color: var(--green);
+}
+
+.feedback.err {
+    color: var(--red);
+}
+
+/* A rejected KEYSTROKE is not a wrong answer. The parser hint used to share the
+   red of "Wrong", so a typo — or a value the number box refused outright, which
+   reads back as "" — looked exactly like being marked incorrect on a reading
+   the student had got right. Gold, and phrased as an instruction, not a verdict. */
+
+.feedback.warn {
+    color: var(--gold);
+}
+
+/* The task line: what this attempt is actually asking for. It carries the
+   zero-error instruction, which is the difference between the OBSERVED reading
+   and the answer — invisible until now, because the Corrected = Observed − Zero
+   Error panel only appears once the attempt has been marked. */
+
+.pbar-hint {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    min-width: 0;
+}
+
+.pbar-hint:empty {
+    display: none;
+}
+
+.pbar-hint strong,
+.qbar-hint strong {
+    color: var(--gold);
+    font-weight: 700;
+}
+
+/* ── Quiz bar ─────────────────────────────────────────────────────── */
+
+.quiz-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.qbar-counter {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 12px;
+}
+
+.qbar-q-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.qbar-q-num {
+    font-family: var(--mono);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+}
+
+.qbar-q-sep {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+}
+
+.qbar-q-total {
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    color: var(--text-dim);
+}
+
+.qbar-hint {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+
+.quiz-feedback {
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.quiz-feedback.ok {
+    color: var(--green);
+}
+
+.quiz-feedback.err {
+    color: var(--red);
+}
+
+.quiz-feedback.warn {
+    color: var(--gold);
+}
+
+/* ── Quiz result panel ──────────────────────────────────────────────── */
+
+.quiz-result {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.qr-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.qr-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.qr-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.qr-stars {
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+}
+
+.qr-score-wrap {
+    text-align: right;
+}
+
+.qr-score {
+    font-family: var(--mono);
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 0 14px currentColor;
+}
+
+.qr-score.perfect {
+    color: var(--gold);
+}
+
+.qr-score.good {
+    color: var(--green);
+}
+
+.qr-score.poor {
+    color: var(--red);
+}
+
+.qr-verdict {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+}
+
+.qr-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.qr-row {
+    display: grid;
+    grid-template-columns: 30px 1fr 1fr 26px;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: 8px;
+    padding: 9px 12px;
+}
+
+.qr-row.ok {
+    border-left-color: var(--green);
+}
+
+.qr-row.err {
+    border-left-color: var(--red);
+}
+
+.qr-qnum {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.qr-correct,
+.qr-given {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+
+.qr-correct strong,
+.qr-given strong {
+    color: var(--text);
+    font-family: var(--mono);
+}
+
+.qr-mark {
+    text-align: right;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.qr-row.ok .qr-mark {
+    color: var(--green);
+}
+
+.qr-row.err .qr-mark {
+    color: var(--red);
+}
+
+/* ── Explore mode ──────────────────────────────────────────────── */
+
+.explore-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.explore-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.explore-cats .pill {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+.is-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+}
+
+.is-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color .18s, box-shadow .18s;
+    text-align: center;
+}
+
+.is-btn:hover {
+    border-color: var(--accent);
+}
+
+.is-btn.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 14px var(--accent-lo);
+    background: var(--surface2);
+}
+
+.is-btn-icon {
+    font-size: 1.5rem;
+}
+
+.is-btn-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.is-btn-sub {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+}
+
+.item-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item-info h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0;
+}
+
+.item-info p,
+.item-info li {
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+
+.item-info strong {
+    color: var(--text);
+}
+
+.item-info .formula-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--gold);
+    text-align: center;
+}
+
+.item-info ul {
+    padding-left: 18px;
+}
+
+.item-info ol {
+    padding-left: 18px;
+}
+
+/* ── Interactive parts explorer ─────────────────────────────────── */
+
+.parts-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.parts-figure {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-x: clip;
+}
+
+.parts-figure-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 14px;
+}
+
+.parts-figure-head h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.parts-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+.parts-svg-holder {
+    width: 100%;
+}
+
+.parts-svg-holder svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Instrument body */
+
+.vc-metal {
+    stroke: #39404d;
+    stroke-width: 1;
+}
+
+.vc-tick {
+    stroke: #171c26;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.vc-tick-b {
+    stroke: #171c26;
+    stroke-width: 1.6;
+    shape-rendering: crispEdges;
+}
+
+.vc-num {
+    fill: #12161f;
+    font-family: var(--font);
+    font-weight: 600;
+}
+
+.vc-etch {
+    fill: none;
+    stroke: rgba(20, 24, 32, .35);
+    stroke-width: 1;
+}
+
+/* Hotspots */
+
+.vc-part {
+    cursor: pointer;
+}
+
+.vc-hl {
+    fill: var(--accent);
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+
+.vc-part:hover .vc-hl,
+.vc-part.on .vc-hl {
+    opacity: .40;
+}
+
+.vc-out {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.4;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+}
+
+.vc-part:hover .vc-out,
+.vc-part.on .vc-out {
+    opacity: 1;
+}
+
+.vc-lead {
+    fill: none;
+    stroke: var(--text-dim);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 3;
+    pointer-events: none;
+    transition: stroke .18s ease;
+}
+
+.vc-part:hover .vc-lead,
+.vc-part.on .vc-lead {
+    stroke: var(--accent);
+    stroke-dasharray: none;
+}
+
+.vc-dot {
+    fill: var(--text-dim);
+    pointer-events: none;
+    transition: fill .18s ease;
+}
+
+.vc-part:hover .vc-dot,
+.vc-part.on .vc-dot {
+    fill: var(--accent);
+}
+
+.vc-badge-bg {
+    fill: var(--surface2);
+    stroke: var(--text-dim);
+    stroke-width: 1.6;
+    transition: fill .18s ease, stroke .18s ease;
+}
+
+.vc-part:hover .vc-badge-bg,
+.vc-part.on .vc-badge-bg {
+    fill: var(--accent);
+    stroke: var(--accent);
+}
+
+.vc-badge-tx {
+    fill: var(--text);
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 15px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    transition: fill .18s ease;
+}
+
+.vc-part:hover .vc-badge-tx,
+.vc-part.on .vc-badge-tx {
+    fill: #fff;
+}
+
+/* List + info */
+
+.parts-body {
+    display: grid;
+    grid-template-columns: 268px 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.parts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.part-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+}
+
+.part-row:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+}
+
+.part-row.active {
+    border-color: var(--accent);
+    background: var(--surface2);
+    box-shadow: 0 0 12px var(--accent-lo);
+}
+
+.part-num {
+    flex: 0 0 auto;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-dim);
+}
+
+.part-row:hover .part-num,
+.part-row.active .part-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.part-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.part-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.part-sub {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    line-height: 1.25;
+}
+
+.parts-info {
+    min-height: 100%;
+}
+
+.parts-info .pi-tag {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--accent-lo);
+    color: var(--accent);
+    font-size: 0.63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.parts-info .pi-spec {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+}
+
+.parts-info .pi-spec dt {
+    color: var(--text-dim);
+}
+
+.parts-info .pi-spec dd {
+    color: var(--text);
+    font-family: var(--mono);
+}
+
+.parts-info .pi-tip {
+    border-left: 3px solid var(--gold);
+    background: rgba(245, 200, 66, .07);
+    border-radius: 0 8px 8px 0;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+}
+
+.parts-info .pi-tip strong {
+    color: var(--gold);
+}
+
+/* ── SEO article: parts reference table ─────────────────────────── */
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.seo-article .table-scroll {
+    overflow-x: auto;
+    margin: 12px 0 16px;
+}
+
+.seo-article table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.seo-article th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.seo-article td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(42, 48, 80, .5);
+    color: var(--text-dim);
+    vertical-align: top;
+}
+
+.seo-article tbody tr:hover td {
+    background: rgba(79, 142, 247, .05);
+}
+
+.seo-article td:first-child {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    width: 1%;
+}
+
+.seo-article td:nth-child(2) {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Responsive breakpoints ─────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    body {
+        padding: 14px 10px 28px;
+    }
+    #app {
+        gap: 10px;
+    }
+    header h1 {
+        font-size: 1.4rem;
+    }
+    .controls-bar {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+    .pill {
+        padding: 6px 10px;
+        font-size: 0.76rem;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+    }
+    /* 1.45fr / 1fr, not 1fr / 1fr: the reading cells hold the bridge text and
+     the TR box holds short lines, so the spare width belongs on the left. */
+    .info-row {
+        grid-template-columns: 1.45fr 1fr;
+        gap: 8px;
+    }
+    .info-row .digital-readout {
+        grid-column: 1 / -1;
+    }
+    .reading-cells {
+        grid-column: 1;
+    }
+    .tr-formula {
+        grid-column: 2;
+    }
+    /* Canvas toolbar collapses to its glyphs — the title/aria-label carry the
+     meaning, and this frees the top of a narrow canvas. */
+    .canvas-toolbar .zt-lbl {
+        display: none;
+    }
+    .canvas-toolbar .zoom-toggle {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+    }
+    /* The readout becomes a single strip instead of a tall stacked box. */
+    .digital-readout {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: center;
+        gap: 9px;
+        padding: 9px 12px;
+    }
+    .dr-label {
+        margin-bottom: 0;
+        font-size: 0.6rem;
+    }
+    .dr-value {
+        font-size: 1.7rem;
+    }
+    .dr-input {
+        font-size: 1.7rem;
+        width: auto;
+        max-width: 54%;
+        text-align: left;
+    }
+    .dr-unit {
+        margin-top: 0;
+        font-size: 0.68rem;
+    }
+    .is-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    /* Phones get the icons alone — the tooltip and the object bar name the part.
+     The canvas card is only ~160 px tall at this width and clips its overflow,
+     so the picker leaves the card entirely and docks as a bottom sheet. */
+    .obj-picker {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        top: auto;
+        width: auto;
+        max-height: 56vh;
+        padding: 10px;
+        z-index: 100;
+    }
+    .obj-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 5px;
+    }
+    .obj-tile {
+        padding: 6px 2px;
+        min-height: 44px;
+    }
+    .obj-tile svg {
+        width: 28px;
+        height: 26px;
+    }
+    .obj-tile-name {
+        display: none;
+    }
+    .obj-fab {
+        height: 40px;
+    }
+    /* it is a flex child of .canvas-fabs now */
+    .ob-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+    .ob-btn {
+        flex: 1 1 0;
+        text-align: center;
+    }
+    .parts-body {
+        grid-template-columns: 1fr;
+    }
+    .parts-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+    .parts-figure {
+        padding: 12px 10px 8px;
+    }
+    /* At phone widths the diagram would shrink the 8.5-unit tick labels and the
+     callout badges below a legible/tappable size, so the figure scrolls inside
+     its own box instead of shrinking. The page itself still never overflows. */
+    .parts-svg-holder {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .parts-svg-holder svg {
+        min-width: 740px;
+    }
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 10px 6px 20px;
+    }
+    header h1 {
+        font-size: 1.15rem;
+    }
+    .subtitle {
+        font-size: 0.76rem;
+    }
+    /* Controls: one tidy row per group instead of a stacked column of tall rows.
+     The label keeps its meaning at a smaller size and the pills share out the
+     rest of the width, so nothing wraps and the bar stays about half as tall. */
+    .controls-bar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 8px;
+        padding: 8px 9px;
+    }
+    /* Three rows instead of five: Mode fills row 1, Precision pairs with the
+     SI/Imperial toggle on row 2, and Zero Error shares row 3 with the tool
+     shortcuts. Only Mode stretches its pills — the rest keep natural widths so
+     they can sit side by side. */
+    .ctrl-group {
+        flex: 0 1 auto;
+        flex-wrap: nowrap;
+        gap: 7px;
+    }
+    .ctrl-label {
+        font-size: 0.58rem;
+        white-space: nowrap;
+    }
+    .lc-hint {
+        display: none;
+    }
+    .pill-tabs {
+        flex-wrap: nowrap;
+        padding: 2px;
+    }
+    .pill {
+        padding: 5px 9px;
+        font-size: 0.72rem;
+        min-height: 32px;
+    }
+    #mode-group {
+        flex: 1 1 100%;
+    }
+    #mode-tabs {
+        flex: 1 1 auto;
+    }
+    #mode-tabs .pill {
+        flex: 1 1 0;
+        justify-content: center;
+        padding: 5px 4px;
+    }
+    #precision-tabs .pill {
+        padding: 5px 7px;
+    }
+    .head-actions {
+        flex: 0 0 auto;
+        margin-left: auto;
+        gap: 6px;
+    }
+    /* Every shortcut becomes an icon, User Guide included. */
+    .btn-guide .lbl {
+        display: none;
+    }
+    .btn-guide {
+        padding: 6px 10px !important;
+        font-size: 0.95rem !important;
+    }
+    .info-row {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+    /* The 768px rules park these in columns 1 and 2; at this width everything is
+     a single stacked column, so the assignments have to be undone or the grid
+     keeps an implicit second track. */
+    .info-row .digital-readout,
+    .info-row .reading-cells,
+    .info-row .tr-formula {
+        grid-column: 1;
+    }
+    /* Three cells stay on ONE row — wrapping them was what made this panel tall.
+     The descriptor under each is dropped because the formula legend directly
+     below already spells MSR / VSR / LC out in full. */
+    .reading-cells {
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+    .rcell {
+        min-width: 0;
+        flex: 1 1 0;
+        padding: 7px 3px;
+    }
+    .rcell-abbr {
+        font-size: 0.6rem;
+        margin-top: 1px;
+    }
+    .rcell-val {
+        font-size: 1.15rem;
+        margin: 3px 0 1px;
+    }
+    .rcell-unit {
+        font-size: 0.56rem;
+    }
+    .tr-formula {
+        padding: 9px 11px;
+        gap: 2px;
+    }
+    .tr-title {
+        font-size: 0.62rem;
+        margin-bottom: 2px;
+    }
+    .tr-legend {
+        font-size: 0.56rem;
+        line-height: 1.35;
+    }
+    .tr-step {
+        font-size: 0.72rem;
+    }
+    .tr-result {
+        font-size: 1rem;
+    }
+    .practice-bar,
+    .quiz-bar {
+        gap: 8px;
+        padding: 10px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .practice-bar .btn,
+    .quiz-bar .btn {
+        width: 100%;
+        text-align: center;
+    }
+    .pbar-score {
+        margin-left: 0;
+        text-align: center;
+    }
+    .qr-row {
+        grid-template-columns: 24px 1fr 1fr 20px;
+        gap: 6px;
+        padding: 7px 8px;
+    }
+    .is-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    .item-info {
+        padding: 14px;
+    }
+    .explore-panel {
+        gap: 10px;
+    }
+    .obj-grid {
+        gap: 4px;
+    }
+    .obj-tile {
+        padding: 5px 1px;
+    }
+    .obj-tile svg {
+        width: 26px;
+        height: 24px;
+    }
+    .obj-fab-tip {
+        display: none;
+    }
+    .obj-fab {
+        padding: 0;
+        width: 40px;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .ob-status {
+        flex: 1 1 100%;
+    }
+    .parts-list {
+        grid-template-columns: 1fr;
+    }
+    .parts-figure-head h3 {
+        font-size: 0.86rem;
+    }
+    .parts-hint {
+        font-size: 0.65rem;
+    }
+    .part-name {
+        font-size: 0.74rem;
+    }
+    .ze-readout {
+        padding: 10px;
+        gap: 6px;
+    }
+    .ze-cell-val {
+        font-size: 1.1rem;
+    }
+    .ze-op {
+        font-size: 1.1rem;
+    }
+}
+
+/* ── Zero Error controls + readout ─────────────────────────────────── */
+
+.ze-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2px 6px;
+}
+
+.ze-btn {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s;
+}
+
+.ze-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.ze-btn:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.ze-val {
+    min-width: 80px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.ze-readout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, rgba(245, 200, 66, 0.08), rgba(245, 200, 66, 0.02));
+    border: 1px solid rgba(245, 200, 66, 0.32);
+    border-radius: var(--radius);
+}
+
+.ze-cell {
+    flex: 1 1 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-width: 110px;
+}
+
+.ze-cell-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+}
+
+.ze-cell-val {
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.ze-cell-unit {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+.ze-cell-error .ze-cell-val {
+    color: var(--gold);
+}
+
+.ze-cell-corrected {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px rgba(61, 220, 132, 0.18) inset;
+}
+
+.ze-cell-corrected .ze-cell-val {
+    color: var(--green);
+}
+
+.ze-op {
+    align-self: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dim);
+}
+
+/* INTERLINK-START  header quick-links */
+
+.head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    background: var(--surface2, #1f2535);
+    color: var(--text, #dde3f0);
+    border: 1.5px solid var(--border, #2a3050);
+    white-space: nowrap;
+    transition: border-color .18s, background .18s, color .18s;
+}
+
+.btn-link:hover {
+    border-color: var(--accent, #4fc3f7);
+    background: var(--accent-lo, rgba(79, 195, 247, .18));
+    color: #fff;
+}
+
+.btn-link img {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    flex: none;
+}
+
+.btn-link .lbl {
+    line-height: 1;
+}
+
+@media(max-width:560px) {
+    .btn-link .lbl {
+        display: none;
+    }
+    .btn-link {
+        padding: 5px 9px;
+    }
+}
+
+/* INTERLINK-END */
+
+/* Mobile: the drag hint is pinned inside the canvas and on the smaller phone
+   canvas it runs across the instrument itself. It sits after the canvas in
+   the DOM, so below 720px it becomes a caption underneath. It still fades
+   after the first interaction exactly as before. */
+
+@media (max-width: 720px) {
+    /* width/flex-basis matter when the card is a flex row (dial-gauge is):
+     without them the hint becomes a flex ITEM beside the canvas and pushes
+     the page into horizontal scroll instead of sitting under the drawing. */
+    .canvas-card {
+        flex-wrap: wrap;
+    }
+    /* The hint now flows below the canvas, so the card grows and anything pinned
+     to the card's bottom lands on top of it. The buttons move up by its line. */
+    .canvas-fabs,
+    .teach-bar {
+        bottom: 38px;
+    }
+    .drag-hint {
+        position: static;
+        bottom: auto;
+        right: auto;
+        left: auto;
+        display: block;
+        margin: 6px 0 0;
+        text-align: center;
+        background: none;
+        padding: 0;
+        border-radius: 0;
+        width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
+/* ── Guided reading ("Show me How?") ──────────────────────────────
+   The trigger lives on the canvas beside "Measure an object" and wears the same
+   .obj-fab shape, because the two are the same kind of thing: load a part, then
+   ask how it is read. Its own colour only appears while it is running. */
+
+.teach-fab[hidden] {
+    display: none;
+}
+
+.teach-fab.running {
+    border-color: var(--red);
+    color: var(--red);
+    box-shadow: 0 4px 18px rgba(255, 85, 85, .22);
+}
+
+.teach-bar {
+    position: absolute;
+    bottom: 14px;
+    z-index: 12;
+    right: calc(14px + var(--cv-gutter));
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.teach-bar[hidden] {
+    display: none;
+}
+
+.teach-bar .zoom-toggle {
+    position: static;
+    width: 30px;
+    min-height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* While it runs the instrument is frozen, so the drag affordances stand down —
+   and both of them sit exactly where the caption band is drawn. */
+
+.canvas-card.teach-running {
+    cursor: default;
+}
+
+.canvas-card.teach-running .drag-hint,
+.canvas-card.teach-running .canvas-fabs {
+    display: none;
+}
+
+/* The tile belonging to the current step. Border and glow only: the Practice
+   blur sits on .rcell-val, and nothing here may lift it. */
+
+.rcell.teach-lit {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 18px var(--accent-lo);
+}
+
+.rcell.teach-lit::before {
+    height: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .teach-fab,
+    .rcell.teach-lit {
+        transition: none;
+    }
+}
+
+@media (max-width: 500px) {
+    /* bottom stays clear of the hint, which flows below the canvas from 720px
+     down; only the side inset and the gap tighten here. */
+    .canvas-fabs {
+        right: calc(10px + var(--cv-gutter));
+        gap: 6px;
+    }
+    .teach-bar {
+        right: calc(10px + var(--cv-gutter));
+    }
+}
+
+/* Stage 4 reveals the TR box's own rows one at a time. Held rows keep their
+   space — the box may not change height mid-animation or the page jumps. */
+
+.tr-step.teach-hold,
+.tr-result.teach-hold {
+    opacity: 0;
+}
+
+.tr-step.teach-pop,
+.tr-result.teach-pop {
+    animation: teachPop .32s ease-out;
+}
+
+@keyframes teachPop {
+    from {
+        opacity: 0;
+        transform: translateX(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.tr-formula.teach-lit {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 18px var(--accent-lo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tr-step.teach-hold,
+    .tr-result.teach-hold {
+        opacity: 1;
+    }
+    .tr-step.teach-pop,
+    .tr-result.teach-pop {
+        animation: none;
+    }
+}
+
+/* The Zoom button stands down while the walkthrough runs — it has its own
+   framing, solved from the reading, and two competing zooms is a confusing
+   picture. Restored untouched when the walkthrough ends. */
+
+.canvas-card.teach-running #btn-zoom,
+.canvas-card.teach-running #btn-align {
+    opacity: .35;
+    pointer-events: none;
+}
+
+/* ── 3D view (vernier3d.js) ────────────────────────────────────────
+   2D | 3D switch: the first group in the canvas toolbar (the top-left corner
+   belongs to the 2D drawing's inside jaws). No colour transition, so the
+   pressed state never lags the view. */
+
+.vc-view-strip {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    margin: 0;
+    align-items: center;
+    background: rgba(10, 14, 22, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+}
+
+.vc-view-strip .pill {
+    min-height: 26px;
+    min-width: 38px;
+    padding: 2px 11px;
+    transition: none;
+    font-size: 0.78rem;
+}
+
+.vc-view-strip .pill[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+}
+
+.vc-view-strip .pill:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.vc3d-stage {
+    position: relative;
+    width: 100%;
+    max-width: 923px;
+    margin: 0 auto;
+    aspect-ratio: 923 / 400;
+    min-height: 280px;
+}
+
+.vc3d-stage .vc3d-gl,
+.vc3d-stage .vc3d-hud {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 10px;
+}
+
+.vc3d-stage .vc3d-hud {
+    pointer-events: none;
+}
+
+.vc3d-stage .vc3d-gl:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.vc3d-msg {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 16px;
+    color: var(--text-dim, #9aa);
+}
+
+.vc3d-msg .vc3d-back {
+    margin-top: 10px;
+}
+
+.vc3d-bar {
+    position: absolute;
+    left: 8px;
+    right: 380px;
+    bottom: 8px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+    pointer-events: none;
+    /* one row that scrolls, never a second row climbing over the scales */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.vc3d-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.vc3d-bar>* {
+    pointer-events: auto;
+    flex: 0 0 auto;
+}
+
+.vc3d-bar button {
+    min-height: 36px;
+    min-width: 36px;
+}
+
+.vc3d-bar .vc3d-btn {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+    transition: none;
+}
+
+.vc3d-bar .vc3d-btn[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.vc3d-bar .vc3d-btn[hidden] {
+    display: none;
+}
+
+.vc3d-bar .vc3d-range {
+    align-self: center;
+    width: 120px;
+}
+
+.view-3d #btn-zoom {
+    display: none;
+}
+
+.view-3d .drag-hint {
+    display: none;
+}
+
+.canvas-card.teach-running .vc3d-bar {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    .vc3d-stage {
+        aspect-ratio: 375 / 380;
+    }
+    .vc3d-bar {
+        right: 104px;
+        gap: 4px;
+    }
+    .vc3d-bar .vc3d-btn {
+        padding: 4px 9px;
+    }
+    .vc3d-bar button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    .vc-view-strip .pill {
+        min-height: 40px;
+        min-width: 52px;
+        padding: 2px 9px;
+    }
+    /* its own row above the canvas (placeViewStrip moves it there): never over the drawing */
+    .vc-view-strip.vc-view-row {
+        width: max-content;
+        margin: 0 0 8px;
+    }
+}
+
+/* 3D on a phone: a self-closing "best on a desktop" notice (V3D-HINT in app.js) */
+
+.v3d-hint {
+    position: absolute;
+    left: 50%;
+    top: 48px;
+    transform: translateX(-50%);
+    z-index: 6;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    background: rgba(10, 16, 24, 0.94);
+    color: #e8f1ff;
+    font-size: 13px;
+    line-height: 1.35;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    animation: v3dHintIn 0.25s ease-out, v3dHintOut 0.4s ease-in 5.6s forwards;
+}
+
+.v3d-hint-x {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #c9d4e6;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.v3d-hint-x:hover,
+.v3d-hint-x:focus-visible {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+@keyframes v3dHintIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -6px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+@keyframes v3dHintOut {
+    to {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .v3d-hint {
+        animation: none;
+    }
+}

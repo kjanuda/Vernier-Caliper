@@ -1,0 +1,1808 @@
+/* ═══════════════════════════════════════════════════════════════════
+   shared/related.js  —  "Related Simulators" strip for every tool page
+   Auto-detects current tool, shows same-category siblings in a
+   compact horizontal scroll row.  Zero dependencies.
+   ═══════════════════════════════════════════════════════════════════ */
+(function() {
+    'use strict';
+
+    /* ── Recent JS errors, attached to a bug report if the visitor allows it ── */
+    if (!window.__msErrors) {
+        window.__msErrors = [];
+        var pushErr = function(m) {
+            window.__msErrors.push({
+                t: Math.round(performance.now()),
+                m: String(m).slice(0, 300)
+            });
+            if (window.__msErrors.length > 10) window.__msErrors.shift();
+        };
+        window.addEventListener('error', function(e) {
+            pushErr((e.message || 'error') + (e.filename ? ' @ ' + e.filename.split('/').slice(-2).join('/') + ':' + e.lineno : ''));
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            pushErr('unhandled rejection: ' + (e.reason && e.reason.message || e.reason));
+        });
+    }
+
+    /* ── All tools with categories (tool can belong to multiple) ── */
+    var TOOLS = [
+        /* ── Measuring Instruments ── */
+        {
+            slug: 'vernier-caliper',
+            cats: ['measuring'],
+            accent: '#4fc3f7',
+            icon: 'Vernier_caliper.png',
+            name: 'Vernier Caliper',
+            desc: 'Measure to 0.02 mm, 0.05 mm, or 0.1 mm precision.'
+        },
+        {
+            slug: 'dial-caliper',
+            cats: ['measuring'],
+            accent: '#d4a017',
+            icon: 'dial-caliper.svg',
+            name: 'Dial Caliper',
+            desc: 'Read a 0.001\u2033, 0.02 mm or 0.01 mm dial \u2014 beam plus needle.'
+        },
+        {
+            slug: 'screw-gauge',
+            cats: ['measuring'],
+            accent: '#81c784',
+            icon: 'screw_gauge.png',
+            name: 'Screw Gauge (Micrometer)',
+            desc: 'Measure to 0.01 mm precision using thimble and barrel.'
+        },
+        {
+            slug: 'steel-ruler',
+            cats: ['measuring'],
+            accent: '#78909c',
+            icon: 'ruler.png',
+            name: 'Steel Ruler',
+            desc: 'Measure length 0\u2013150 mm with 0.5 mm precision.'
+        },
+        {
+            slug: 'protractor',
+            cats: ['measuring'],
+            accent: '#ffb74d',
+            icon: 'protractor.png',
+            name: 'Protractor',
+            desc: 'Measure angles 0\u00b0\u2013180\u00b0 with a rotating arm.'
+        },
+        {
+            slug: 'pressure-gauge',
+            cats: ['measuring'],
+            accent: '#ef5350',
+            icon: 'pressure-gauge.png',
+            name: 'Pressure Gauge',
+            desc: 'Read pressure 0\u2013100 PSI with dual scale.'
+        },
+        {
+            slug: 'height-gauge',
+            cats: ['measuring'],
+            accent: '#4fc3f7',
+            icon: 'height-gauge.svg',
+            name: 'Vernier Height Gauge',
+            desc: 'Measure heights 0\u2013120 mm with 0.02 mm precision.'
+        },
+        {
+            slug: 'dial-gauge',
+            cats: ['measuring'],
+            accent: '#26c6da',
+            icon: 'Dial_gauge.png',
+            name: 'Dial Gauge',
+            desc: 'Read displacement 0\u201310.00 mm with 0.01 mm precision.'
+        },
+        {
+            slug: 'bevel-protractor',
+            cats: ['measuring'],
+            accent: '#ffd600',
+            icon: 'bevel-protractor.svg',
+            name: 'Bevel Protractor',
+            desc: 'Measure angles with 5\u2032 vernier least count precision.'
+        },
+
+        /* ── Mechanics & Motion ── */
+        {
+            slug: 'free-body-diagram',
+            cats: ['mechanics'],
+            accent: '#3f8cff',
+            icon: 'free-body-diagram.svg',
+            name: 'Free Body Diagram & Force Resolver',
+            desc: 'Resolve concurrent forces — resultant, components & equilibrium.'
+        },
+        {
+            slug: 'simple-pendulum',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#ff7597',
+            icon: 'simple-pendulum.svg',
+            name: 'Simple Pendulum Simulator',
+            desc: 'Period T = 2π√(L/g), SHM, energy — length, gravity & amplitude.'
+        },
+        {
+            slug: 'collision-momentum',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#ff4081',
+            icon: 'collision-momentum.svg',
+            name: 'Collision \u0026 Momentum',
+            desc: 'Air track, 2D pucks, ballistic pendulum, cradle and crash rig.'
+        },
+        {
+            slug: 'newtons-laws',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#f9a825',
+            icon: 'newtons-laws.svg',
+            name: 'Newton\u2019s Laws of Motion',
+            desc: 'Inertia, F = ma, action-reaction with free body diagrams.'
+        },
+        {
+            slug: 'projectile-motion',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#7cb342',
+            icon: 'projectile-motion.svg',
+            name: 'Projectile Motion',
+            desc: 'Trajectory simulator \u2014 launch angle, velocity, gravity.'
+        },
+        {
+            slug: 'gravity-simulator',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#8f8bff',
+            icon: 'gravity-simulator.svg',
+            name: 'Gravity Simulator',
+            desc: "N-body orbits, Kepler\u2019s laws, the Solar System, binary stars, Lagrange points and three-body chaos."
+        },
+        {
+            slug: 'escape-velocity',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#6c7bff',
+            icon: 'escape-velocity.svg',
+            name: 'Escape Velocity',
+            desc: "Newton's cannonball \u2014 fall back, orbit, or escape under real gravity."
+        },
+        {
+            slug: 'centripetal-force',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#fb7185',
+            icon: 'centripetal-force.svg',
+            name: 'Centripetal Force & Circular Motion',
+            desc: 'F = mv\u00b2/r calculator plus banked curves, vertical loops, orbits and the rotating frame.'
+        },
+        {
+            slug: 'friction',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#8d6e63',
+            icon: 'friction.svg',
+            name: 'Friction & Contact Forces',
+            desc: 'Static & kinetic friction \u2014 flat, inclined, braking.'
+        },
+        {
+            slug: 'simple-machines',
+            cats: ['mechanics'],
+            accent: '#ab47bc',
+            icon: 'simple-machines.svg',
+            name: 'Simple Machines',
+            desc: 'Lever, pulley, inclined plane, wheel & axle, screw, wedge.'
+        },
+        {
+            slug: 'hookes-law',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#26a69a',
+            icon: 'hookes-law.svg',
+            name: 'Hooke\u2019s Law Simulator',
+            desc: 'Interactive spring simulator \u2014 F = kx, series & parallel.'
+        },
+        {
+            slug: 'shm',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#00bfa5',
+            icon: 'shm.svg',
+            name: 'Simple Harmonic Motion',
+            desc: 'Spring-mass & pendulum SHM with energy graphs.'
+        },
+        {
+            slug: 'electrical-wiring',
+            cats: ['electrical'],
+            accent: '#f5a623',
+            icon: 'electrical-wiring.svg',
+            name: 'Electrical Wiring Simulator & Trainer',
+            desc: 'Wire real switches, sockets & lamps with true multicore cables; size cable by SWG & amp load.'
+        },
+        {
+            slug: 'resistor-color-code',
+            cats: ['electrical'],
+            accent: '#ffca28',
+            icon: 'resistor-color-code.svg',
+            name: 'Resistor Color Code Calculator',
+            desc: 'Decode 3/4/5/6-band resistors \u2014 value, tolerance & range.'
+        },
+        {
+            slug: 'ohms-law',
+            cats: ['electrical'],
+            accent: '#ffa000',
+            icon: 'ohms-law.svg',
+            name: 'Ohm\u2019s Law & DC Circuits',
+            desc: 'Series, parallel & mixed circuits with Kirchhoff\u2019s laws.'
+        },
+        {
+            slug: 'rc-circuit',
+            cats: ['electrical'],
+            accent: '#00bcd4',
+            icon: 'rc-circuit.svg',
+            name: 'RC Circuit \u2014 Charging & Discharging',
+            desc: 'Time constant, charging/discharging curves, energy storage.'
+        },
+        {
+            slug: 'rlc-circuit',
+            cats: ['electrical'],
+            accent: '#7c4dff',
+            icon: 'rlc-circuit.svg',
+            name: 'RLC Circuit \u2014 AC Analysis',
+            desc: 'Impedance, resonance, phasor diagrams, power factor.'
+        },
+        {
+            slug: 'transformer',
+            cats: ['electrical'],
+            accent: '#ff6d00',
+            icon: 'transformer.svg',
+            name: 'Transformer \u2014 Step-Up & Step-Down',
+            desc: 'Turns ratio, voltage transformation, efficiency & losses.'
+        },
+        {
+            slug: 'wheatstone-bridge',
+            cats: ['electrical'],
+            accent: '#26a69a',
+            icon: 'wheatstone-bridge.svg',
+            name: 'Wheatstone Bridge',
+            desc: 'Balanced & unbalanced bridge, galvanometer, unknown resistance.'
+        },
+        {
+            slug: 'induction-motor',
+            cats: ['electrical'],
+            accent: '#00bcd4',
+            icon: 'induction-motor.svg',
+            name: 'Induction Motor Simulator',
+            desc: '3-phase & 1-phase. Torque-slip, no-load & blocked-rotor tests.'
+        },
+        {
+            slug: 'dc-motor',
+            cats: ['electrical'],
+            accent: '#e91e63',
+            icon: 'dc-motor.svg',
+            name: 'DC Motor & Load Test Lab',
+            desc: 'Brake, Swinburne & retardation tests. Diagnose motor faults.'
+        },
+        {
+            slug: 'diode-rectifier',
+            cats: ['electrical'],
+            accent: '#f44336',
+            icon: 'diode-rectifier.svg',
+            name: 'Diode & Rectifier Circuits',
+            desc: 'Half-wave, full-wave & bridge rectifier with waveforms.'
+        },
+        {
+            slug: 'capacitor-bank',
+            cats: ['electrical'],
+            accent: '#29b6f6',
+            icon: 'capacitor-bank.svg',
+            name: 'Capacitor Bank Designer',
+            desc: 'Series & parallel capacitor banks, energy storage, power factor.'
+        },
+        {
+            slug: 'star-delta',
+            cats: ['electrical'],
+            accent: '#ab47bc',
+            icon: 'star-delta.svg',
+            name: 'Star-Delta Conversion',
+            desc: 'General Y-\u0394 transform, line vs phase values, star-delta starter.'
+        },
+        {
+            slug: 'kirchhoff-solver',
+            cats: ['electrical'],
+            accent: '#66bb6a',
+            icon: 'kirchhoff-solver.svg',
+            name: 'Kirchhoff\u2019s Circuit Solver',
+            desc: 'KVL & KCL analysis, node voltages, mesh currents.'
+        },
+        {
+            slug: 'vibrations',
+            cats: ['mechanics'],
+            accent: '#0288d1',
+            icon: 'vibrations.svg',
+            name: 'Vibrations \u2014 Spring-Mass-Damper',
+            desc: 'Free, damped, forced & resonance modes.'
+        },
+        {
+            slug: 'tuning-fork',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#9575cd',
+            icon: 'tuning-fork.svg',
+            name: 'Tuning Fork Simulator',
+            desc: 'Prong geometry \u2192 frequency, beats, resonance tube & speed of sound.'
+        },
+        {
+            slug: 'gyroscope',
+            cats: ['mechanics'],
+            accent: '#ff6f00',
+            icon: 'gyroscope.svg',
+            name: 'Gyroscope Simulator',
+            desc: 'Precession, nutation, angular momentum \u2014 4 configurations.'
+        },
+
+        /* ── Mechanisms & Machines ── */
+        {
+            slug: 'four-bar-linkage',
+            cats: ['mechanisms'],
+            accent: '#00897b',
+            icon: 'four-bar-linkage.svg',
+            name: 'Four-Bar Linkage',
+            desc: 'Grashof criterion, transmission angle, coupler curves.'
+        },
+        {
+            slug: 'slider-crank',
+            cats: ['mechanisms'],
+            accent: '#e65100',
+            icon: 'slider-crank.svg',
+            name: 'Slider-Crank Mechanism',
+            desc: 'All 4 inversions \u2014 IC engine, quick-return, osc. cylinder.'
+        },
+        {
+            slug: 'scotch-yoke',
+            cats: ['mechanisms'],
+            accent: '#0091ea',
+            icon: 'scotch-yoke.svg',
+            name: 'Scotch Yoke Mechanism',
+            desc: 'Pure SHM \u2014 crank-pin in slotted yoke, comparison with slider-crank.'
+        },
+        {
+            slug: 'geneva-mechanism',
+            cats: ['mechanisms'],
+            accent: '#7c3aed',
+            icon: 'geneva-mechanism.svg',
+            name: 'Geneva Mechanism',
+            desc: 'Intermittent motion \u2014 3, 4, 6, 8-slot configs, dwell ratio, velocity graphs.'
+        },
+        {
+            slug: 'cam-follower',
+            cats: ['mechanisms'],
+            accent: '#d84315',
+            icon: 'cam-follower.svg',
+            name: 'Cam & Follower Mechanism',
+            desc: 'SHM, cycloidal, uniform velocity & acceleration profiles.'
+        },
+        {
+            slug: 'gear-trains',
+            cats: ['mechanisms'],
+            accent: '#c62828',
+            icon: 'gear-trains.svg',
+            name: 'Gear Train Calculator',
+            desc: 'Simple, compound & worm drives with animated gears.'
+        },
+        {
+            slug: 'gearbox',
+            cats: ['mechanisms'],
+            accent: '#ff6f00',
+            icon: 'gearbox.svg',
+            name: 'Gearbox Simulator',
+            desc: '5-speed synchromesh manual transmission with clutch pedal and animated countershaft.'
+        },
+        {
+            slug: 'centrifugal-governor',
+            cats: ['mechanisms'],
+            accent: '#6a1b9a',
+            icon: 'centrifugal-governor.svg',
+            name: 'Centrifugal Governor',
+            desc: 'Watt, Porter, Proell governors with controlling force.'
+        },
+        {
+            slug: 'flywheel-energy',
+            cats: ['mechanisms'],
+            accent: '#558b2f',
+            icon: 'flywheel-energy.svg',
+            name: 'Flywheel Energy Storage',
+            desc: 'Kinetic energy, moment of inertia, hoop stress.'
+        },
+        {
+            slug: 'flywheel',
+            cats: ['mechanisms'],
+            accent: '#558b2f',
+            icon: 'flywheel-energy.svg',
+            name: 'Flywheel Dynamics',
+            desc: 'Turning moment diagram, coefficient of fluctuation.'
+        },
+        {
+            slug: 'bearing-selection',
+            cats: ['mechanisms'],
+            accent: '#7b1fa2',
+            icon: 'bearing-selection.svg',
+            name: 'Bearing Selection Calculator',
+            desc: 'Find the bearing size from load, speed & life — 8 types, real catalogue sizes.'
+        },
+
+        /* ── Strength of Materials ── */
+        {
+            slug: 'stress-strain',
+            cats: ['strength'],
+            accent: '#7c4dff',
+            icon: 'stress-strain.svg',
+            name: 'Stress-Strain Diagram',
+            desc: 'Interactive stress-strain curve \u2014 Hooke\u2019s Law, yield, UTS.'
+        },
+        {
+            slug: 'mohrs-circle',
+            cats: ['strength'],
+            accent: '#7e57c2',
+            icon: 'mohrs-circle.svg',
+            name: 'Mohr\u2019s Circle',
+            desc: 'Principal stresses, max shear, stress transformation.'
+        },
+        {
+            slug: 'beam-bending',
+            cats: ['strength'],
+            accent: '#00acc1',
+            icon: 'beam-bending.svg',
+            name: 'Beam Bending \u2014 SFD & BMD',
+            desc: 'Shear force & bending moment diagrams for beams.'
+        },
+        {
+            slug: 'truss-analysis',
+            cats: ['strength'],
+            accent: '#e65100',
+            icon: 'truss-analysis.svg',
+            name: 'Truss Analysis',
+            desc: 'Warren, Pratt, and Howe trusses \u2014 method of joints.'
+        },
+        {
+            slug: 'bolted-joint',
+            cats: ['strength', 'workshop'],
+            accent: '#546e7a',
+            icon: 'bolted-joint.svg',
+            name: 'Bolted Joint Design',
+            desc: 'Metric bolts M6\u2013M24 \u2014 tensile, shear, bearing stress.'
+        },
+        {
+            slug: 'power-screw',
+            cats: ['strength', 'calculators'],
+            accent: '#ff9100',
+            icon: 'power-screw.svg',
+            name: 'Power Screw Calculator',
+            desc: 'Lead screw torque, efficiency & self-locking for ACME, square, buttress & trapezoidal threads.'
+        },
+        {
+            slug: 'riveted-joints',
+            cats: ['strength', 'workshop'],
+            accent: '#ff7043',
+            icon: 'riveted-joints.svg',
+            name: 'Riveted Joints Trainer',
+            desc: 'Rivet head types & riveted joint configurations.'
+        },
+        {
+            slug: 'rivet-joint-designer',
+            cats: ['strength', 'workshop'],
+            accent: '#4d8fb0',
+            icon: 'rivet-joint-designer.svg',
+            name: 'Rivet Joint Designer',
+            desc: 'Lap & butt joints, chain/zigzag, pitch, failure modes & efficiency.'
+        },
+        {
+            slug: 'spring-design',
+            cats: ['strength'],
+            accent: '#00c853',
+            icon: 'spring-design.svg',
+            name: 'Spring Design Calculator',
+            desc: 'Helical spring stiffness, shear stress, Wahl factor, deflection.'
+        },
+        {
+            slug: 'shaft-torsion',
+            cats: ['strength'],
+            accent: '#ff6e40',
+            icon: 'shaft-torsion.svg',
+            name: 'Shaft & Torsion Simulator',
+            desc: 'Shear stress, angle of twist, polar MOI for solid & hollow shafts.'
+        },
+        {
+            slug: 'utm-testing',
+            cats: ['strength'],
+            accent: '#1e88e5',
+            icon: 'utm-testing.svg',
+            name: 'UTM Virtual Lab',
+            desc: 'Universal Testing Machine \u2014 tensile & compression tests with real-time stress-strain curves.'
+        },
+        {
+            slug: 'morse-test',
+            cats: ['testing', 'thermal'],
+            accent: '#00897b',
+            icon: 'morse-test.svg',
+            name: 'Morse Test Rig',
+            desc: 'IC engine cylinder cut-out test \u2014 indicated power, friction power & mechanical efficiency.'
+        },
+        {
+            slug: 'centrifugal-pump',
+            cats: ['testing', 'thermal'],
+            accent: '#0277bd',
+            icon: 'centrifugal-pump.svg',
+            name: 'Centrifugal Pump Test Rig',
+            desc: 'Head-capacity, power & efficiency curves \u2014 BEP, affinity laws, system curve & NPSH.'
+        },
+        {
+            slug: 'hydraulic-turbine',
+            cats: ['testing', 'thermal'],
+            accent: '#00838f',
+            icon: 'hydraulic-turbine.svg',
+            name: 'Hydraulic Turbine Test Rig',
+            desc: 'Pelton, Francis & Kaplan \u2014 efficiency, power, torque, unit quantities & specific speed.'
+        },
+        {
+            slug: 'torsion-testing',
+            cats: ['strength', 'workshop'],
+            accent: '#ff8c42',
+            icon: 'torsion-testing.svg',
+            name: 'Torsion Testing Machine',
+            desc: 'Universal Torsion Testing Machine \u2014 twist solid & hollow shafts to fracture with real-time torque-twist curves.'
+        },
+        {
+            slug: 'impact-testing',
+            cats: ['strength', 'workshop'],
+            accent: '#ff3d00',
+            icon: 'impact-testing.svg',
+            name: 'Impact Testing Virtual Lab',
+            desc: 'Charpy & Izod pendulum impact tester \u2014 DBTT curves, fracture analysis, 7 materials.'
+        },
+        {
+            slug: 'fatigue-testing',
+            cats: ['strength'],
+            accent: '#5e35b1',
+            icon: 'fatigue-testing.svg',
+            name: 'Fatigue Testing Virtual Lab',
+            desc: 'R.R. Moore rotating beam fatigue tester \u2014 S-N curves, crack growth, endurance limit, 7 materials.'
+        },
+        {
+            slug: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia \u2014 Simulation Trainer',
+            desc: 'Section properties for 8 cross-sections \u2014 Ix, Iy, section modulus, parallel axis theorem.'
+        },
+        /* Section landing pages: listed only beside their parent family (see `parent` below) */
+        {
+            slug: 'moment-of-inertia-rectangle',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of a Rectangle',
+            desc: 'Ix = bh\u00b3/12 about the centroid, bh\u00b3/3 about the base \u2014 formula & live calculator.'
+        },
+        {
+            slug: 'moment-of-inertia-circle',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of a Circle',
+            desc: '\u03c0d\u2074/64 about a diameter, polar J = \u03c0d\u2074/32, semicircle & quarter circle.'
+        },
+        {
+            slug: 'moment-of-inertia-hollow-circle',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of a Hollow Circle',
+            desc: 'Tube & pipe sections \u2014 I = \u03c0(D\u2074 \u2212 d\u2074)/64, section modulus, calculator.'
+        },
+        {
+            slug: 'moment-of-inertia-hollow-rect',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of a Hollow Rectangle',
+            desc: 'Box / RHS sections \u2014 Ix, Iy and section modulus with a live calculator.'
+        },
+        {
+            slug: 'moment-of-inertia-i-beam',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of an I-Beam',
+            desc: 'I-beam & wide-flange sections \u2014 Ix, Iy, section modulus, worked example.'
+        },
+        {
+            slug: 'moment-of-inertia-t-section',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of a T-Section',
+            desc: 'Tee beams \u2014 centroid position, Ix by the parallel axis theorem, Iy.'
+        },
+        {
+            slug: 'moment-of-inertia-channel',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of a Channel Section',
+            desc: 'C-sections \u2014 Ix, Iy, centroid offset and section modulus.'
+        },
+        {
+            slug: 'moment-of-inertia-angle',
+            parent: 'moment-of-inertia',
+            cats: ['strength'],
+            accent: '#ff6d00',
+            icon: 'moment-of-inertia.svg',
+            name: 'Moment of Inertia of an Angle Section',
+            desc: 'L-sections \u2014 product of inertia and principal axes.'
+        },
+        {
+            slug: 'column-buckling',
+            cats: ['strength'],
+            accent: '#00e5ff',
+            icon: 'column-buckling.svg',
+            name: 'Column Buckling Simulator',
+            desc: 'Euler & Johnson critical load \u2014 7 materials, 4 end conditions, animated buckling modes.'
+        },
+
+        /* ── Thermal & Fluid Engineering ── */
+        {
+            slug: 'thermodynamics',
+            cats: ['thermal'],
+            accent: '#ec407a',
+            icon: 'thermodynamics.svg',
+            name: 'Thermodynamics Cycles',
+            desc: 'Carnot, Otto, Diesel & Brayton cycles with PV diagrams.'
+        },
+        {
+            slug: 'heat-transfer',
+            cats: ['thermal'],
+            accent: '#d32f2f',
+            icon: 'heat-transfer.svg',
+            name: 'Heat Transfer Modes',
+            desc: 'Conduction, convection, radiation with animated heat flow.'
+        },
+        {
+            slug: 'fluid-flow',
+            cats: ['thermal'],
+            accent: '#00695c',
+            icon: 'fluid-flow.svg',
+            name: 'Fluid Flow in Pipes',
+            desc: 'Laminar & turbulent flow \u2014 Reynolds number, pressure drop.'
+        },
+        {
+            slug: 'pascals-law',
+            cats: ['thermal', 'basic-science'],
+            accent: '#42a5f5',
+            icon: 'pascals-law.svg',
+            name: 'Pascal\u2019s Law Simulator',
+            desc: 'Hydraulic press \u2014 force multiplication & mechanical advantage.'
+        },
+        {
+            slug: 'bernoullis-principle',
+            cats: ['thermal', 'basic-science'],
+            accent: '#8bc34a',
+            icon: 'bernoullis-principle.svg',
+            name: 'Bernoulli\u2019s Principle',
+            desc: 'Venturi effect, continuity equation, dynamic pressure.'
+        },
+        {
+            slug: 'airfoil-analysis',
+            cats: ['thermal'],
+            accent: '#38bdf8',
+            icon: 'airfoil-analysis.svg',
+            name: 'Airfoil Calculator Virtual Lab',
+            desc: 'NACA 4- & 5-digit sections \u2014 lift, drag, moment, Cp distribution & boundary-layer transition.'
+        },
+        {
+            slug: 'wind-tunnel',
+            cats: ['thermal'],
+            accent: '#00bcd4',
+            icon: 'wind-tunnel.svg',
+            name: 'Wind Tunnel Simulator',
+            desc: 'Drag, lift, streamlines, pressure distribution \u2014 6 test objects, Reynolds number.'
+        },
+        {
+            slug: 'refrigeration-cycle',
+            cats: ['thermal'],
+            accent: '#0097a7',
+            icon: 'refrigeration-cycle.svg',
+            name: 'Refrigeration Cycle Simulator',
+            desc: 'Vapor compression cycle \u2014 P-h diagram, COP, 4 refrigerants.'
+        },
+        {
+            slug: 'rankine-cycle',
+            cats: ['thermal'],
+            accent: '#f4511e',
+            icon: 'rankine-cycle.svg',
+            name: 'Rankine Cycle Simulator',
+            desc: 'Steam power cycle \u2014 T-s & P-v diagrams, steam tables, thermal efficiency, Carnot comparison.'
+        },
+        {
+            slug: 'psychrometric-chart',
+            cats: ['thermal', 'calculators'],
+            accent: '#14b8a6',
+            icon: 'psychrometric-chart.svg',
+            name: 'Psychrometric Chart Calculator',
+            desc: 'Interactive ASHRAE chart \u2014 click for T\u2099, T\u209c, T\u207f\u209a, RH, W, h. HVAC processes, coil sizing, comfort & data-center overlays, altitude-corrected.'
+        },
+
+        /* ── Workshop & Manufacturing ── */
+        {
+            slug: 'tap-drill-chart',
+            cats: ['workshop', 'calculators'],
+            accent: '#c8a05a',
+            icon: 'tap-drill-chart.svg',
+            name: 'Tap Drill Size Chart',
+            desc: 'Tap drill, clearance drill & % thread engagement for metric, UNC, UNF & BSW.'
+        },
+        {
+            slug: 'thread-nomenclature',
+            cats: ['workshop'],
+            accent: '#ef6c00',
+            icon: 'thread-nomenclature.svg',
+            name: 'Thread Nomenclature',
+            desc: 'ISO 261 metric thread dimensions \u2014 major, minor & pitch diameters.'
+        },
+        {
+            slug: 'welding-symbols',
+            cats: ['workshop'],
+            accent: '#e91e63',
+            icon: 'welding-symbols.svg',
+            name: 'Welding Symbol Trainer',
+            desc: 'AWS A2.4 weld symbols \u2014 groove, fillet, plug, spot & seam.'
+        },
+        {
+            slug: 'weld-strength',
+            cats: ['workshop', 'strength', 'calculators'],
+            accent: '#ff1744',
+            icon: 'weld-strength.svg',
+            name: 'Weld Strength Calculator',
+            desc: 'Fillet & butt weld stress \u2014 throat area, FOS, pass/fail for 6 joint types.'
+        },
+        {
+            slug: 'gdt-trainer',
+            cats: ['workshop'],
+            accent: '#00bfa5',
+            icon: 'gdt-trainer.svg',
+            name: 'GD&T Trainer',
+            desc: 'All 14 ASME Y14.5 symbols \u2014 feature control frames, tolerance zones, datums.'
+        },
+        {
+            slug: 'tolerance-fits',
+            cats: ['workshop'],
+            accent: '#5c6bc0',
+            icon: 'tolerance-fits.svg',
+            name: 'Tolerance & Fits Calculator',
+            desc: 'ISO 286 limits & fits \u2014 clearance, transition & interference.'
+        },
+        {
+            slug: 'bend-radius',
+            cats: ['workshop', 'calculators'],
+            accent: '#d4922a',
+            icon: 'bend-radius.svg',
+            name: 'Sheet Metal Bend Radius Calculator',
+            desc: 'Bend allowance, K-factor, flat length, springback & tonnage.'
+        },
+        {
+            slug: 'heat-treatment',
+            cats: ['workshop', 'strength'],
+            accent: '#e8590c',
+            icon: 'heat-treatment.svg',
+            name: 'Heat Treatment Simulator',
+            desc: 'Anneal, quench, temper, case harden & age steel and aluminium \u2014 atoms, microstructure, TTT/CCT, hardness, 2D & 3D.'
+        },
+        {
+            slug: 'hardness-testing',
+            cats: ['workshop'],
+            accent: '#e53935',
+            icon: 'hardness-testing.svg',
+            name: 'Hardness Testing Simulator',
+            desc: 'Brinell, Rockwell & Vickers hardness tests with animated indentation.'
+        },
+        {
+            slug: 'drilling-machine',
+            cats: ['workshop'],
+            accent: '#43a047',
+            icon: 'drilling-machine.svg',
+            name: 'Drilling Machine Simulator',
+            desc: 'Column drill press \u2014 parts identification, drilling operations, cutting parameters.'
+        },
+        {
+            slug: 'lathe-machine',
+            cats: ['workshop'],
+            accent: '#1e88e5',
+            icon: 'lathe-machine.svg',
+            name: 'Lathe Machine Simulator',
+            desc: 'Centre lathe \u2014 parts identification, turning/facing/threading, cutting parameters.'
+        },
+        {
+            slug: 'milling-machine',
+            cats: ['workshop'],
+            accent: '#00bfa5',
+            icon: 'milling-machine.svg',
+            name: 'Milling Machine Simulator',
+            desc: 'End mill, face mill, slot drill \u2014 cutting speed, feed per tooth, MRR & power.'
+        },
+        {
+            slug: 'hydraulic-circuit',
+            cats: ['workshop'],
+            accent: '#0277bd',
+            icon: 'hydraulic-circuit.svg',
+            name: 'Hydraulic Circuit Simulator',
+            desc: 'Pump, cylinder, DCV \u2014 pressure, flow, force, piston speed.'
+        },
+        {
+            slug: 'cnc-gcode',
+            cats: ['workshop'],
+            accent: '#43a047',
+            icon: 'cnc-gcode.svg',
+            name: 'CNC G-Code Simulator',
+            desc: 'Write & visualize G-code tool paths \u2014 G00, G01, G02, G03.'
+        },
+        {
+            slug: 'ac-generator',
+            cats: ['electrical'],
+            accent: '#7b1fa2',
+            icon: 'ac-generator.svg',
+            name: 'AC Generator Simulator',
+            desc: 'Rotating coil EMF, sinusoidal waveform, RMS voltage, frequency.'
+        },
+        {
+            slug: 'planetary-gear',
+            cats: ['mechanisms'],
+            accent: '#f0c05a',
+            icon: 'planetary-gear.svg',
+            name: 'Planetary Gear Simulator',
+            desc: 'Hold, drive or free the sun, carrier and ring: Willis equation, lever analogy, Prius & automatic.'
+        },
+        {
+            slug: 'clutch-system',
+            cats: ['mechanisms'],
+            accent: '#ef8354',
+            icon: 'clutch-system.svg',
+            name: 'Clutch System Simulator',
+            desc: 'Single and multi-plate, cone and centrifugal clutches: torque capacity, number of plates, slip heat and take-up.'
+        },
+        {
+            slug: 'automatic-transmission',
+            cats: ['mechanisms'],
+            accent: '#22b8cf',
+            icon: 'automatic-transmission.svg',
+            name: 'Automatic Transmission Simulator',
+            desc: 'Torque converter automatic, CVT, DCT and AMT in one car — 3D cutaway, clutch apply chart, every shift animated.'
+        },
+        {
+            slug: 'differential',
+            cats: ['mechanisms'],
+            accent: '#f59e0b',
+            icon: 'differential.svg',
+            name: 'Car Differential Simulator',
+            desc: 'Open, limited-slip, viscous, Torsen and locking differentials in 2D and 3D — cornering, one-wheel spin, crown wheel and pinion.'
+        },
+        {
+            slug: 'hydraulic-brake-system',
+            cats: ['mechanisms'],
+            accent: '#e5383b',
+            icon: 'hydraulic-brake-system.svg',
+            name: 'Hydraulic Brake System Simulator',
+            desc: 'Pedal, booster and master cylinder to disc and drum brakes: car, two-wheeler or single wheel, lock-up and stopping distance.'
+        },
+        {
+            slug: 'magnetic-playground',
+            cats: ['electrical', 'basic-science'],
+            accent: '#f43f5e',
+            icon: 'magnetic-playground.svg',
+            name: 'Magnetic Playground',
+            desc: 'Twelve magnetism stations, Grades 3\u201312: poles, field lines, Earth\u2019s field, electromagnets, motors, induction.'
+        },
+        {
+            slug: 'faradays-law',
+            cats: ['electrical', 'basic-science'],
+            accent: '#6366f1',
+            icon: 'faradays-law.svg',
+            name: 'Faraday’s Law Simulator',
+            desc: 'Move a magnet through a coil — flux, induced EMF, Lenz’s law, galvanometer.'
+        },
+        {
+            slug: 'belt-drive',
+            cats: ['mechanisms'],
+            accent: '#795548',
+            icon: 'belt-drive.svg',
+            name: 'Belt & Chain Drive',
+            desc: 'Open/crossed belt & chain drives \u2014 velocity ratio, belt length, wrap angle, capstan equation.'
+        },
+        {
+            slug: 'pressure-vessel',
+            cats: ['strength'],
+            accent: '#bf360c',
+            icon: 'pressure-vessel.svg',
+            name: 'Thin-Walled Pressure Vessel',
+            desc: 'Hoop & longitudinal stress in cylindrical & spherical pressure vessels with factor of safety.'
+        },
+        {
+            slug: 'gas-turbine',
+            cats: ['thermal'],
+            accent: '#f9822a',
+            icon: 'gas-turbine.svg',
+            name: 'Gas Turbine',
+            desc: 'Brayton cycle power plant, turbojet & turbofan \u2014 regeneration, reheat, thrust, TSFC, 2D cutaway & 3D engine.'
+        },
+        {
+            slug: 'steam-engine',
+            cats: ['thermal'],
+            accent: '#d9a441',
+            icon: 'steam-engine.svg',
+            name: 'Steam Engine Simulator',
+            desc: 'Double-acting slide-valve engine \u2014 indicator diagram, Zeuner valve diagram, cut-off, IHP, compound & governor, in 2D & 3D.'
+        },
+        {
+            slug: 'hydroelectric-power-plant',
+            cats: ['thermal'],
+            accent: '#2b8fd6',
+            icon: 'hydroelectric-power-plant.svg',
+            name: 'Hydroelectric Power Plant',
+            desc: 'Dam, penstock, surge tank, Kaplan, Francis & Pelton plants and pumped storage \u2014 water hammer, governor, 2D & 3D.'
+        },
+        {
+            slug: 'steam-boiler',
+            cats: ['thermal'],
+            accent: '#f2683c',
+            icon: 'steam-boiler.svg',
+            name: 'Steam Boiler Simulator',
+            desc: 'Fire-tube & water-tube boilers \u2014 Cochran, Lancashire, Babcock & Wilcox, Benson \u2014 cut open and animated in 2D & 3D.'
+        },
+        {
+            slug: 'rotary-engine',
+            cats: ['thermal'],
+            accent: '#ff7a2f',
+            icon: 'rotary-engine.svg',
+            name: 'Rotary Engine Simulator',
+            desc: 'Wankel engine in 2D and 3D — rotor, apex seals, eccentric shaft, P–V diagram, power and torque.'
+        },
+        {
+            slug: 'four-stroke-engine',
+            cats: ['thermal'],
+            accent: '#e53935',
+            icon: 'four-stroke-engine.svg',
+            name: 'Four Stroke Engine',
+            desc: 'Otto & Diesel cycles \u2014 piston animation, PV diagram, valve timing, thermal efficiency.'
+        },
+        {
+            slug: 'two-stroke-engine',
+            cats: ['thermal'],
+            accent: '#1976d2',
+            icon: 'two-stroke-engine.svg',
+            name: 'Two Stroke Engine',
+            desc: 'Port timing & crankcase compression \u2014 scavenging, PV diagram, efficiency.'
+        },
+        {
+            slug: 'boyles-law',
+            cats: ['thermal', 'basic-science'],
+            accent: '#00acc1',
+            icon: 'boyles-law.svg',
+            name: "Boyle\u2019s Law Simulator",
+            desc: 'PV = constant \u2014 animated piston-cylinder with gas particles, P-V hyperbola, isothermal.'
+        },
+        {
+            slug: 'charles-law',
+            cats: ['thermal', 'basic-science'],
+            accent: '#ff7043',
+            icon: 'charles-law.svg',
+            name: "Charles\u2019 Law Simulator",
+            desc: 'V/T = constant \u2014 isobaric expansion, animated particles, V-T diagram, absolute zero.'
+        },
+        {
+            slug: 'specific-heat-capacity',
+            cats: ['thermal', 'basic-science'],
+            accent: '#e53935',
+            icon: 'specific-heat-capacity.svg',
+            name: 'Specific Heat Capacity',
+            desc: 'Q = mc\u0394T \u2014 compare 6 materials, animated flames & thermometers, temperature graphs.'
+        },
+        {
+            slug: 'buoyancy',
+            cats: ['thermal', 'basic-science'],
+            accent: '#0288d1',
+            icon: 'buoyancy.svg',
+            name: 'Buoyancy & Archimedes',
+            desc: 'F_b = \u03c1V_disp\u00b7g \u2014 tank + overflow-can rig: 10 solids, 6 fluids, the level rise, density from two weighings.'
+        },
+        {
+            slug: 'viscosity-experiment',
+            cats: ['thermal', 'basic-science'],
+            accent: '#ffb300',
+            icon: 'viscosity-experiment.svg',
+            name: 'Viscosity Experiment',
+            desc: 'Stokes\u2019 falling-ball viscometer \u2014 timed sphere drop + incline fluid race.'
+        },
+        {
+            slug: 'thermal-conductivity',
+            cats: ['thermal', 'basic-science'],
+            accent: '#fb8c00',
+            icon: 'thermal-conductivity.svg',
+            name: 'Thermal Conductivity',
+            desc: 'Q/t = k\u00b7A\u00b7\u0394T/L \u2014 pick a material, watch heat travel, compare 10 conductors and insulators.'
+        },
+        {
+            slug: 'orifice-lab',
+            cats: ['thermal'],
+            accent: '#0ea5e9',
+            icon: 'orifice-lab.svg',
+            name: 'Orifice Experiment',
+            desc: 'Find Cd, Cv and Cc from a jet trajectory and a collecting tank.'
+        },
+        {
+            slug: 'reynolds-number',
+            cats: ['thermal', 'basic-science'],
+            accent: '#039be5',
+            icon: 'reynolds-number.svg',
+            name: 'Reynolds Number',
+            desc: 'Re = \u03c1vD/\u03bc \u2014 laminar vs turbulent flow with animated streamlines and eddies, 6 fluids.'
+        },
+        {
+            slug: 'continuity-equation',
+            cats: ['thermal', 'basic-science'],
+            accent: '#00a896',
+            icon: 'continuity-equation.svg',
+            name: 'Continuity Equation',
+            desc: 'A\u2081V\u2081 = A\u2082V\u2082 \u2014 mass conservation in pipe flow, particles speed up at constriction.'
+        },
+        {
+            slug: 'stefan-boltzmann',
+            cats: ['thermal', 'basic-science'],
+            accent: '#e64a19',
+            icon: 'stefan-boltzmann.svg',
+            name: 'Stefan-Boltzmann',
+            desc: 'Solve P = \u03b5\u03c3AT\u2074 for any unknown \u2014 Planck spectrum, T\u2074 curve, Wien\'s law, star &amp; planet T_eq.'
+        },
+        {
+            slug: 'phase-change',
+            cats: ['thermal', 'basic-science'],
+            accent: '#26c6da',
+            icon: 'phase-change.svg',
+            name: 'Phase Change & Latent Heat',
+            desc: 'Q = mc\u0394T + mL \u2014 solid/liquid/gas transitions, heating curves with plateaus, 10 materials, single or A vs B.'
+        },
+        {
+            slug: 'thermocouple',
+            cats: ['thermal', 'electrical', 'calculators'],
+            accent: '#ff5722',
+            icon: 'thermocouple.svg',
+            name: 'Thermocouple & Seebeck Effect',
+            desc: 'Seebeck effect \u2014 two metals, hot & cold junction, thermo-EMF. E\u2013\u03b8 parabola, neutral & inversion temperature.'
+        },
+        {
+            slug: 'thermal-expansion',
+            cats: ['thermal', 'calculators', 'basic-science'],
+            accent: '#ff6e40',
+            icon: 'thermal-expansion.svg',
+            name: 'Thermal Expansion Calculator',
+            desc: 'Linear expansion, shrink fit design & bimetallic strip \u2014 10 materials, animated visualization.'
+        },
+        {
+            slug: 'free-fall',
+            cats: ['mechanics', 'basic-science'],
+            accent: '#7c4dff',
+            icon: 'free-fall.svg',
+            name: 'Free Fall & Gravity',
+            desc: 'Drop objects under gravity \u2014 s = \u00bdgt\u00b2, velocity & distance graphs, compare planets.'
+        },
+        {
+            slug: 'torque-rotation',
+            cats: ['mechanics'],
+            accent: '#e040fb',
+            icon: 'torque-rotation.svg',
+            name: 'Torque & Rotation',
+            desc: 'Wrench torque, seesaw balance, spinning discs, rolling race \u2014 \u03c4 = F\u00d7r, I = mr\u00b2.'
+        },
+        {
+            slug: 'refraction',
+            cats: ['testing', 'basic-science'],
+            accent: '#22d3ee',
+            icon: 'refraction.svg',
+            name: 'Refraction of Light Simulator',
+            desc: 'Snell\u2019s law bench \u2014 glass block, prism & apparent depth, critical angle & total internal reflection.'
+        },
+        {
+            slug: 'ray-optics',
+            cats: ['testing', 'basic-science'],
+            accent: '#00b0ff',
+            icon: 'ray-optics.svg',
+            name: 'Ray Optics Simulator & Trainer',
+            desc: 'Mirrors & lenses \u2014 concave/convex ray tracing, image formation, magnification.'
+        },
+        {
+            slug: 'bjt-transistor',
+            cats: ['electrical'],
+            accent: '#ff6e40',
+            icon: 'bjt-transistor.svg',
+            name: 'BJT Transistor',
+            desc: 'NPN & PNP \u2014 animated electron/hole flow, depletion regions, avalanche & Zener breakdown.'
+        },
+        {
+            slug: 'ideal-gas-law',
+            cats: ['thermal', 'basic-science'],
+            accent: '#ff7043',
+            icon: 'ideal-gas-law.svg',
+            name: 'Ideal Gas Law Simulator',
+            desc: 'PV = nRT \u2014 animated particles, isothermal, isobaric & isochoric processes, combined gas law.'
+        },
+        {
+            slug: 'build-your-atom',
+            cats: ['basic-science'],
+            accent: '#a855f7',
+            icon: 'build-your-atom.svg',
+            name: 'Build Your Atom',
+            desc: 'Drag protons, neutrons & electrons \u2014 live Bohr model, periodic-table match, ions & isotopes across 118 elements.'
+        },
+        {
+            slug: 'build-your-crystal',
+            cats: ['basic-science'],
+            accent: '#14b8a6',
+            icon: 'build-your-crystal.svg',
+            name: 'Build Your Crystal',
+            desc: 'Unit cells made visible, plus a crystal-building game \u2014 choose a lattice, place atoms, make SC, BCC, FCC, diamond and ionic crystals.'
+        },
+        {
+            slug: 'galvanic-cell',
+            cats: ['basic-science'],
+            accent: '#a3e635',
+            icon: 'galvanic-cell.svg',
+            name: 'Galvanic & Electrolytic Cell Lab',
+            desc: 'Voltaic and electrolytic cells on a realistic bench \u2014 salt bridge, voltmeter, Nernst equation, electroplating and Faraday\'s laws.'
+        },
+
+        /* ── Engineering Calculators (new) ── */
+        {
+            slug: 'stress-concentration',
+            cats: ['calculators', 'strength'],
+            accent: '#e040fb',
+            icon: 'stress-concentration.svg',
+            name: 'Stress Concentration (Kt) Simulator',
+            desc: 'Kt factor for 8 geometries \u2014 holes, notches, fillets with color-mapped stress.'
+        },
+        {
+            slug: 'crack-propagation',
+            cats: ['strength'],
+            accent: '#ff6e40',
+            icon: 'crack-propagation.svg',
+            name: 'Crack Propagation & Critical Crack Length',
+            desc: 'LEFM lab \u2014 K_I, critical crack length, Paris-law fatigue growth, plastic zone, 12 materials.'
+        },
+        {
+            slug: 'machining-calculator',
+            cats: ['calculators', 'workshop'],
+            accent: '#76ff03',
+            icon: 'machining-calculator.svg',
+            name: 'Machining Calculator',
+            desc: 'RPM, feed rate, MRR, machining time & power for turning, milling & drilling.'
+        },
+
+        /* ── Engineering Calculators (batch 2) ── */
+        {
+            slug: 'bearing-life',
+            cats: ['calculators', 'mechanics'],
+            accent: '#42a5f5',
+            icon: 'bearing-life.svg',
+            name: 'Bearing Life Calculator',
+            desc: 'L10 life, dynamic load rating, equivalent load \u2014 ball & roller bearings, reliability factors.'
+        },
+        {
+            slug: 'gear-strength',
+            cats: ['calculators', 'mechanics'],
+            accent: '#ffab00',
+            icon: 'gear-strength.svg',
+            name: 'Gear Strength Simulator',
+            desc: 'Lewis bending & AGMA contact stress \u2014 spur & helical gears, safety factor, module selection.'
+        },
+        {
+            slug: 'heat-exchanger',
+            cats: ['calculators', 'thermal'],
+            accent: '#ef5350',
+            icon: 'heat-exchanger.svg',
+            name: 'Heat Exchanger Simulator',
+            desc: 'LMTD & effectiveness-NTU methods \u2014 parallel & counter flow, outlet temps, required area.'
+        },
+        {
+            slug: 'fatigue-life',
+            cats: ['calculators', 'strength'],
+            accent: '#ab47bc',
+            icon: 'fatigue-life.svg',
+            name: 'Fatigue Life Simulator',
+            desc: 'S-N curve, Goodman/Soderberg/Gerber diagrams \u2014 endurance limit, Marin factors, Miner\u2019s rule.'
+        },
+        {
+            slug: 'hydraulic-cylinder',
+            cats: ['calculators', 'mechanics'],
+            accent: '#26a69a',
+            icon: 'hydraulic-cylinder.svg',
+            name: 'Hydraulic Cylinder Simulator',
+            desc: 'Bore/rod sizing, extend/retract force & speed \u2014 flow rate, pump power, rod buckling check.'
+        },
+
+        /* ── Virtual Labs ── */
+        {
+            slug: 'litmus-test',
+            cats: ['testing', 'basic-science'],
+            accent: '#7c4dff',
+            icon: 'litmus-test.svg',
+            name: 'Litmus Paper Test Virtual Lab',
+            desc: 'Test 15 chemicals with red, blue & universal pH paper \u2014 animated colour changes, pH 1\u201314.'
+        },
+        {
+            slug: 'titration',
+            cats: ['basic-science'],
+            accent: '#f06292',
+            icon: 'titration.svg',
+            name: 'Titration Simulator',
+            desc: 'Burette, live pH curve, 6 indicators & a titration calculator \u2014 weak & diprotic acids, concordant titres.'
+        },
+        {
+            slug: 'chemical-mixing',
+            cats: ['testing', 'basic-science'],
+            accent: '#009688',
+            icon: 'chemical-mixing.svg',
+            name: 'Mix Acids & Bases \u2014 Virtual Chemistry Lab',
+            desc: 'Pour, react & test pH with litmus paper. 14 chemicals, animated mixing, rigorous acid-base chemistry engine.'
+        },
+        {
+            slug: 'chemical-bonds',
+            cats: ['basic-science'],
+            accent: '#1de9b6',
+            icon: 'chemical-bonds.svg',
+            name: 'Chemical Bonds Simulator',
+            desc: 'Visualise ionic & covalent bonding with animated Bohr models \u2014 20 compounds, practice mode & quiz.'
+        },
+        {
+            slug: 'balance-chemical-equations',
+            cats: ['basic-science'],
+            accent: '#cddc39',
+            icon: 'balance-chemical-equations.svg',
+            name: 'Balancing Chemical Equations',
+            desc: 'A balancing chemical equations game: 36 stages, a Daily Balance, a Speed Lab and a balancer with steps.'
+        },
+        {
+            slug: 'pneumatic-circuit',
+            cats: ['testing', 'workshop'],
+            accent: '#42a5f5',
+            icon: 'pneumatic-circuit.svg',
+            name: 'Pneumatic Circuit Simulator',
+            desc: 'ISO 1219 pneumatic circuit builder \u2014 37 components, FRL, 5/2 DCV, timers, 9 pre-built circuits, 4 modes.'
+        },
+        {
+            slug: 'electro-pneumatic-circuit',
+            cats: ['testing', 'workshop'],
+            accent: '#ff9800',
+            icon: 'electro-pneumatic-circuit.svg',
+            name: 'Electro-Pneumatic Circuit Simulator',
+            desc: 'Dual-domain circuit builder \u2014 51 components, solenoid valves, relays, sensors, 8 pre-built circuits, 4 modes.'
+        },
+        {
+            slug: 'plc-ladder-logic',
+            cats: ['electrical'],
+            accent: '#7cb342',
+            icon: 'plc-ladder-logic.svg',
+            name: 'PLC Ladder Logic Simulator',
+            desc: 'Build & simulate IEC 61131-3 ladder diagrams with timers, counters & I/O panel'
+        },
+        {
+            slug: 'logic-gates',
+            cats: ['electrical', 'maths'],
+            accent: '#00c853',
+            icon: 'logic-gates.svg',
+            name: 'Logic Gates Simulator',
+            desc: 'AND, OR, NOT, NAND, NOR, XOR & XNOR gates with truth tables & circuit builder.'
+        },
+        {
+            slug: 'karnaugh-map',
+            cats: ['electrical', 'maths'],
+            accent: '#ab47bc',
+            icon: 'karnaugh-map.svg',
+            name: 'Karnaugh Map Solver',
+            desc: 'K-Map simplifier for 2-5 variables with SOP/POS output & prime implicants.'
+        },
+        {
+            slug: 'math-graphing',
+            cats: ['maths'],
+            accent: '#18b4f5',
+            icon: 'math-graphing.svg',
+            name: 'Math Function Graph Generator',
+            desc: 'Plot functions, derivatives & integrals with annotation tools — sketch, shapes, text labels, fullscreen, and PNG export.'
+        },
+        {
+            slug: 'calculus-visualizer',
+            cats: ['maths'],
+            accent: '#00bfa5',
+            icon: 'calculus-visualizer.svg',
+            name: 'Calculus Visualizer & Simulator',
+            desc: 'Animate derivatives & integrals — tangent sweep, Riemann sums, symbolic differentiation with rule identification.'
+        },
+        {
+            slug: 'matrix-multiplication',
+            cats: ['maths'],
+            accent: '#ff5252',
+            icon: 'matrix-multiplication.svg',
+            name: 'Matrix Operations Simulator',
+            desc: 'Animated matrix multiplication, addition, subtraction & Gauss-Jordan inverse — calculator up to 6×6.'
+        },
+        {
+            slug: 'area-calculator',
+            cats: ['maths'],
+            accent: '#ff6fb1',
+            icon: 'area-calculator.svg',
+            name: 'Area Calculator & Shape Area Simulator',
+            desc: 'Animated area derivation for 16 standard shapes plus custom polygon triangulation — built for school students.'
+        }
+    ];
+
+    /* ── Detect current tool from URL ────────────────────────────── */
+    var path = window.location.pathname;
+    var match = path.match(/\/tools\/([^\/]+)/);
+    if (!match) return; /* Not on a tool page */
+    var currentSlug = match[1];
+
+    /* Find all entries for the current tool (may appear once with multiple cats) */
+    var currentTool = null;
+    for (var i = 0; i < TOOLS.length; i++) {
+        if (TOOLS[i].slug === currentSlug) {
+            currentTool = TOOLS[i];
+            break;
+        }
+    }
+    if (!currentTool) return;
+
+
+    /* ── Gather siblings (share any category, excluding self, deduplicated) ── */
+    /* A `parent` entry is a landing page of another tool (the eight
+       moment-of-inertia-<section> pages). It is never offered as a category
+       sibling, which would fill every Strength strip with near-duplicates;
+       on its own family's pages the family is listed first instead. */
+    var currentCats = currentTool.cats;
+    var family = currentTool.parent || null;
+    var seen = {};
+    seen[currentSlug] = true;
+    var siblings = [];
+    if (family) {
+        for (var f = 0; f < TOOLS.length; f++) {
+            var ft = TOOLS[f];
+            if (!seen[ft.slug] && (ft.slug === family || ft.parent === family)) {
+                siblings.push(ft);
+                seen[ft.slug] = true;
+            }
+        }
+    }
+    var familyCount = siblings.length;
+    for (var j = 0; j < TOOLS.length; j++) {
+        var t = TOOLS[j];
+        if (seen[t.slug] || t.parent) continue;
+        for (var c = 0; c < t.cats.length; c++) {
+            if (currentCats.indexOf(t.cats[c]) !== -1) {
+                siblings.push(t);
+                seen[t.slug] = true;
+                break;
+            }
+        }
+    }
+    if (siblings.length === 0) return;
+
+    /* Save first 3 deterministic siblings for user-guide links (before shuffle) */
+    var guideSiblings = siblings.slice(0, 3);
+
+    /* Shuffle for variety, then cap at 8 */
+    for (var s = siblings.length - 1; s > familyCount; s--) {
+        var r = familyCount + Math.floor(Math.random() * (s - familyCount + 1));
+        var tmp = siblings[s];
+        siblings[s] = siblings[r];
+        siblings[r] = tmp;
+    }
+    siblings = siblings.slice(0, 8);
+
+    /* ── Determine path prefix (../../ from tools/slug/) ─────────── */
+    var prefix = '../../';
+
+    /* The strip's CSS lives in shared/site.css (.related-*), so a strip
+       written into the HTML is styled before this script runs. */
+
+    /* ── The strip ───────────────────────────────────────────────────
+       deploy/build-related.js writes it into the page's HTML (so crawlers
+       that do not run JavaScript see the links). If it is there, ADOPT it:
+       add the ad card and nothing else. Only a page without one gets a
+       strip built here, from the same selection. */
+    var adCardCount = 0;
+
+    function adCardEl() {
+        var adCard = document.createElement('div');
+        adCard.className = 'tool-card ad-card';
+        adCard.setAttribute('aria-label', 'Sponsored ad');
+        adCard.innerHTML =
+            '<ins class="adsbygoogle" style="display:block"' +
+            ' data-ad-format="fluid"' +
+            ' data-ad-layout-key="-6j+e8+1b-4t+8i"' +
+            ' data-ad-client="ca-pub-8475334350760145"' +
+            ' data-ad-slot="9219683348"></ins>';
+        adCardCount++;
+        return adCard;
+    }
+    /* AdSense In-feed native ad card after position 4 (or last card if fewer). */
+    function adAfter(i, n) {
+        return i === 3 || (i === n - 1 && n < 4 && i >= 2);
+    }
+
+    var app = document.getElementById('app');
+    var section = app && app.querySelector('.related-section[data-static]');
+    var track;
+    if (section) {
+        track = section.querySelector('.related-track');
+        var staticCards = track ? track.querySelectorAll('a.tool-card') : [];
+        for (var sc = 0; sc < staticCards.length; sc++) {
+            if (adAfter(sc, staticCards.length)) staticCards[sc].insertAdjacentElement('afterend', adCardEl());
+        }
+    } else {
+        section = document.createElement('section');
+        section.className = 'related-section';
+        section.setAttribute('aria-label', 'Related Simulators');
+
+        var headerDiv = document.createElement('div');
+        headerDiv.className = 'related-header';
+        headerDiv.innerHTML =
+            '<h2 class="related-title">\u{1F517} Related Simulators</h2>' +
+            '<span class="related-count">' + siblings.length + ' more</span>';
+        section.appendChild(headerDiv);
+
+        track = document.createElement('div');
+        track.className = 'related-track';
+
+        siblings.forEach(function(t, i) {
+            var card = document.createElement('a');
+            card.className = 'tool-card';
+            card.href = prefix + 'tools/' + t.slug + '/';
+            card.style.cssText = '--card-accent:' + t.accent;
+            card.innerHTML =
+                '<img class="tool-card-thumb" src="' + prefix + 'Icons/' + t.icon + '" alt="' + t.name + '" width="100" height="100" loading="lazy"/>' +
+                '<div class="tool-card-body">' +
+                '<div class="tool-card-name">' + t.name + '</div>' +
+                '<div class="tool-card-desc">' + t.desc + '</div>' +
+                '<div class="tool-card-footer">' +
+                '<span class="tool-card-tag">Simulate</span>' +
+                '<span class="tool-card-arrow">\u2192</span>' +
+                '</div>' +
+                '</div>';
+            track.appendChild(card);
+            /* DO NOT push adsbygoogle here — the track is still detached; the push
+               happens after the section is attached to #app below. */
+            if (adAfter(i, siblings.length)) track.appendChild(adCardEl());
+        });
+
+        section.appendChild(track);
+        if (app) app.appendChild(section);
+    }
+
+    /* ── Insert into page ─────────────────────────────────────────── */
+    if (app) {
+        /* NOW the <ins> tags are in the document — request fills. One push
+           per ad card we added. */
+        for (var pi = 0; pi < adCardCount; pi++) {
+            try {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {}
+        }
+
+        /* The visible breadcrumb is no longer injected here. It is written into
+           each page's static HTML by deploy/build-site-nav.js, inside the
+           Home / Library bar, from the same table as its BreadcrumbList JSON-LD. */
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SOCIAL SHARE BAR — injected before .seo-article on every tool
+       ═══════════════════════════════════════════════════════════════ */
+    var pageUrl = encodeURIComponent(window.location.href);
+    var pageTitle = encodeURIComponent(document.title);
+    var shareText = encodeURIComponent(document.title + ' — Free interactive simulator');
+
+    var bar = document.createElement('div');
+    bar.className = 'share-bar';
+    bar.innerHTML =
+        '<span class="share-bar-label">Share this tool</span>' +
+
+        /* WhatsApp */
+        '<a class="share-btn share-btn--wa" href="https://wa.me/?text=' + shareText + '%20' + pageUrl + '" target="_blank" rel="noopener noreferrer" title="Share on WhatsApp" aria-label="Share on WhatsApp">' +
+        '<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+        '</a>' +
+
+        /* Facebook */
+        '<a class="share-btn share-btn--fb" href="https://www.facebook.com/sharer/sharer.php?u=' + pageUrl + '" target="_blank" rel="noopener noreferrer" title="Share on Facebook" aria-label="Share on Facebook">' +
+        '<svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' +
+        '</a>' +
+
+        /* LinkedIn */
+        '<a class="share-btn share-btn--li" href="https://www.linkedin.com/sharing/share-offsite/?url=' + pageUrl + '" target="_blank" rel="noopener noreferrer" title="Share on LinkedIn" aria-label="Share on LinkedIn">' +
+        '<svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' +
+        '</a>' +
+
+        /* X (Twitter) */
+        '<a class="share-btn share-btn--tw" href="https://twitter.com/intent/tweet?url=' + pageUrl + '&text=' + pageTitle + '" target="_blank" rel="noopener noreferrer" title="Share on X" aria-label="Share on X">' +
+        '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' +
+        '</a>' +
+
+        /* Copy Link */
+        '<button class="share-btn share-btn--copy" title="Copy link" aria-label="Copy link">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+        '<span class="share-tooltip">Copied!</span>' +
+        '</button>' +
+
+        /* QR Code */
+        '<button class="share-btn share-btn--qr" title="Show QR Code" aria-label="Show QR Code for this page">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2zM17 17h2v2h-2zM15 19h2v2h-2zM19 19h2v2h-2z"/></svg>' +
+        '</button>' +
+
+        /* Report Issue */
+        '<a class="btn-report" data-google-vignette="false" href="/contact/?topic=problem&amp;tool=' + encodeURIComponent(document.title.split(' — ')[0].split(' | ')[0].trim()) + '#message" target="_blank" rel="noopener" title="Report an issue" aria-label="Report an issue with this tool">' +
+        '<span class="btn-report-icon">!</span>&#9888; Report Issue' +
+        '</a>';
+
+    /* Report Issue: open our own form (shared/support.js, loaded on first click).
+       The contact form (topic: something is wrong) is the fallback if the script cannot load. */
+    var reportBtn = bar.querySelector('.btn-report');
+    if (reportBtn) {
+        reportBtn.addEventListener('click', function(e) {
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+            e.preventDefault();
+            var go = function() {
+                window.MSSupport.openReport();
+            };
+            if (window.MSSupport) return go();
+            var sc = document.createElement('script');
+            sc.src = '/shared/support.js?v=5';
+            sc.onload = function() {
+                if (window.MSSupport) go();
+                else window.open(reportBtn.href, '_blank', 'noopener');
+            };
+            sc.onerror = function() {
+                window.open(reportBtn.href, '_blank', 'noopener');
+            };
+            document.head.appendChild(sc);
+        });
+    }
+
+    /* Copy-link handler */
+    var copyBtn = bar.querySelector('.share-btn--copy');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(window.location.href).then(function() {
+                var tip = copyBtn.querySelector('.share-tooltip');
+                tip.classList.add('show');
+                setTimeout(function() {
+                    tip.classList.remove('show');
+                }, 1600);
+            });
+        });
+    }
+
+    /* ── QR Code — uses qrcode-generator library (local, MIT license) ── */
+    /* Library loaded dynamically from shared/qrcode.min.js on first click.
+       Kazuhiko Arase's battle-tested encoder — used by millions, always scannable. */
+
+    var qrLibLoaded = false;
+    var qrLibReady = false;
+
+    function loadQRLib(cb) {
+        if (qrLibReady) {
+            cb();
+            return;
+        }
+        if (qrLibLoaded) { /* loading in progress, poll */
+            var poll = setInterval(function() {
+                if (qrLibReady) {
+                    clearInterval(poll);
+                    cb();
+                }
+            }, 50);
+            return;
+        }
+        qrLibLoaded = true;
+        var script = document.createElement('script');
+        script.src = prefix + 'shared/qrcode.min.js';
+        script.onload = function() {
+            qrLibReady = true;
+            cb();
+        };
+        script.onerror = function() {
+            qrLibReady = false;
+            qrLibLoaded = false;
+            cb();
+        }; /* fallback: cb runs, qrcode won't exist */
+        document.head.appendChild(script);
+    }
+
+    var qrBtn = bar.querySelector('.share-btn--qr');
+    if (qrBtn) {
+        qrBtn.addEventListener('click', function() {
+            loadQRLib(function() {
+                var url = window.location.href;
+                var toolName = document.title.split('\u2014')[0].split('|')[0].trim() || 'MechSimulator';
+
+                /* Generate QR and render to canvas */
+                function renderQR(text) {
+                    var canvas = document.createElement('canvas');
+                    var pixelSize = 260;
+                    canvas.width = pixelSize;
+                    canvas.height = pixelSize;
+                    var ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, pixelSize, pixelSize);
+
+                    if (typeof qrcode !== 'function') {
+                        /* Library failed to load — show URL as text */
+                        ctx.fillStyle = '#333';
+                        ctx.font = '12px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('QR unavailable', pixelSize / 2, pixelSize / 2 - 10);
+                        ctx.font = '10px monospace';
+                        ctx.fillText(text.replace('https://', ''), pixelSize / 2, pixelSize / 2 + 10);
+                        return canvas;
+                    }
+
+                    /* Use the library — auto-detect version, EC level M for good scannability */
+                    var qr = qrcode(0, 'M');
+                    qr.addData(text);
+                    qr.make();
+
+                    var count = qr.getModuleCount();
+                    var margin = 20;
+                    var cellSize = Math.floor((pixelSize - margin * 2) / count);
+                    /* Re-center with integer cell size to avoid sub-pixel gaps */
+                    var actualSize = cellSize * count;
+                    var offset = Math.floor((pixelSize - actualSize) / 2);
+
+                    ctx.fillStyle = '#000000'; /* Pure black for maximum contrast */
+                    for (var r = 0; r < count; r++) {
+                        for (var c = 0; c < count; c++) {
+                            if (qr.isDark(r, c)) {
+                                ctx.fillRect(offset + c * cellSize, offset + r * cellSize, cellSize, cellSize);
+                            }
+                        }
+                    }
+                    return canvas;
+                }
+
+                /* --- Build modal --- */
+                var overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
+
+                var modal = document.createElement('div');
+                modal.style.cssText = 'background:#ffffff;border-radius:20px;padding:32px 28px 24px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default;position:relative';
+
+                /* Close button */
+                var closeBtn = document.createElement('button');
+                closeBtn.textContent = '\u00d7';
+                closeBtn.style.cssText = 'position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.6rem;color:#999;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px';
+                closeBtn.addEventListener('mouseover', function() {
+                    closeBtn.style.color = '#333';
+                });
+                closeBtn.addEventListener('mouseout', function() {
+                    closeBtn.style.color = '#999';
+                });
+                modal.appendChild(closeBtn);
+
+                /* Title */
+                var titleEl = document.createElement('div');
+                titleEl.textContent = 'Scan to open';
+                titleEl.style.cssText = 'font-size:1.15rem;font-weight:700;color:#1a1a2e;margin-bottom:4px;font-family:system-ui,sans-serif';
+                modal.appendChild(titleEl);
+
+                /* Subtitle */
+                var subEl = document.createElement('div');
+                subEl.textContent = toolName;
+                subEl.style.cssText = 'font-size:.82rem;color:#6b7a99;margin-bottom:16px;font-family:system-ui,sans-serif';
+                modal.appendChild(subEl);
+
+                /* QR canvas container */
+                var qrWrap = document.createElement('div');
+                qrWrap.style.cssText = 'background:#f8f9fa;border-radius:14px;padding:12px;display:inline-block;margin-bottom:16px';
+                var qrCanvas = renderQR(url);
+                qrCanvas.style.cssText = 'display:block;border-radius:6px';
+                qrWrap.appendChild(qrCanvas);
+                modal.appendChild(qrWrap);
+
+                /* URL */
+                var urlEl = document.createElement('div');
+                urlEl.style.cssText = 'font-size:.72rem;color:#8899aa;font-family:monospace;word-break:break-all;line-height:1.4;max-width:280px;margin:0 auto 12px';
+                urlEl.textContent = url.replace('https://', '');
+                modal.appendChild(urlEl);
+
+                /* Hint */
+                var hintEl = document.createElement('div');
+                hintEl.innerHTML = '\uD83D\uDCF1 Point your phone camera at this QR code';
+                hintEl.style.cssText = 'font-size:.78rem;color:#aab;font-family:system-ui,sans-serif';
+                modal.appendChild(hintEl);
+
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                /* Close handlers */
+                function closeModal() {
+                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                }
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) closeModal();
+                });
+                closeBtn.addEventListener('click', closeModal);
+                document.addEventListener('keydown', function onEsc(e) {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                        document.removeEventListener('keydown', onEsc);
+                    }
+                });
+            }); /* end loadQRLib callback */
+        });
+    }
+
+    /* Insert before .user-guide if present, else before .seo-article */
+    var userGuide = app && app.querySelector('.user-guide');
+    var seoArticle = app && app.querySelector('.seo-article');
+    var shareTarget = userGuide || seoArticle;
+    if (shareTarget) {
+        shareTarget.parentNode.insertBefore(bar, shareTarget);
+    } else if (app) {
+        /* Fallback: insert before related section */
+        app.insertBefore(bar, section);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       USER GUIDE INTERNAL LINKS — "Continue Learning" box at end of guide
+       ═══════════════════════════════════════════════════════════════ */
+    if (userGuide && guideSiblings.length >= 3) {
+        /* Use deterministic siblings (saved before shuffle) — stable for crawlers */
+        var guideLinks = guideSiblings;
+        var learnBox = document.createElement('details');
+        learnBox.style.cssText = 'margin-top:16px';
+        var learnSummary = document.createElement('summary');
+        learnSummary.innerHTML = '<span class="guide-section-num">\u2197</span> Continue Learning';
+        learnBox.appendChild(learnSummary);
+        var learnContent = document.createElement('div');
+        learnContent.className = 'guide-content';
+        learnContent.innerHTML =
+            '<p>Build on what you\u2019ve learned here with these related simulators:</p><ul>' +
+            guideLinks.map(function(gl) {
+                return '<li><a href="' + prefix + 'tools/' + gl.slug + '/" style="color:var(--accent,#4fc3f7)">' + gl.name + '</a> \u2014 ' + gl.desc + '</li>';
+            }).join('') +
+            '</ul><p>All simulators include Simulate, Explore, Practice, and Quiz modes for complete learning.</p>';
+        learnBox.appendChild(learnContent);
+        userGuide.appendChild(learnBox);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       "FREE TO USE" NOTE — appended at the end of .seo-article
+       ═══════════════════════════════════════════════════════════════
+       This block used to inject a HARD-CODED date:
+
+           <strong>Last updated:</strong> <time datetime="2026-03-20">March 2026</time>
+
+       It was added as a freshness signal and became its opposite. Every page on
+       the site told Google it was last updated 20 March 2026, forever — and
+       Google believed it: tools/tuning-fork/, created 2026-09-13, was showing
+       "20 Mar 2026" in the SERP. A date that never moves is a STALENESS signal,
+       and a shared script is the worst place to keep one, because then every
+       page makes the same claim.
+
+       The per-page date now lives in static HTML, written by
+       scripts/stamp-dates.py from the sitemap <lastmod> — see SEO_Guideline
+       item 29. Static markup also beats JS-injected markup for crawlers.
+
+       So: if the page carries a stamp, append this note to it so the reader
+       sees ONE line. If it does not (blog articles carry their own Article
+       dates; a few pages have none), render the note ALONE. Never invent a
+       date here again.
+       ═══════════════════════════════════════════════════════════════ */
+    if (seoArticle && !(app && app.hasAttribute('data-hide-free-note'))) {
+        var NOTE = 'Free to use — no signup required.';
+        var stamped = seoArticle.querySelector('.page-updated');
+        if (stamped) {
+            stamped.insertAdjacentHTML('beforeend', ' · ' + NOTE);
+        } else {
+            var upd = document.createElement('p');
+            upd.style.cssText = 'font-size:.75rem;color:var(--text-dim,#6b7a99);margin-top:24px;padding-top:12px;border-top:1px solid var(--border,#2a3050)';
+            upd.textContent = NOTE;
+            seoArticle.appendChild(upd);
+        }
+    }
+})();

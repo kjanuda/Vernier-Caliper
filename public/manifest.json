@@ -1,0 +1,22 @@
+{
+  "name": "MechSimulator — Mechanical Engineering Simulators & Trainers",
+  "short_name": "MechSimulator",
+  "description": "Free interactive simulators for precision measurement tools — Vernier calipers, micrometers, height gauges, dial gauges, rulers, protractors, pressure gauges, tolerance calculator, and thread nomenclature trainer.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#4f8ef7",
+  "background_color": "#0d1117",
+  "categories": ["education", "utilities"],
+  "icons": [
+    {
+      "src": "brand/no_background_logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "brand/biglogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

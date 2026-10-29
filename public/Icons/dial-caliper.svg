@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Dial caliper">
+  <rect width="200" height="200" rx="24" fill="#1f2535" stroke="#2a3050" stroke-width="2"/>
+
+  <!-- beam -->
+  <rect x="26" y="104" width="150" height="18" rx="3" fill="#aeb6c2"/>
+  <rect x="26" y="104" width="150" height="7" rx="3" fill="#ced5df"/>
+  <!-- beam graduations: one per needle revolution -->
+  <g stroke="#3a4152" stroke-width="2">
+    <line x1="40"  y1="122" x2="40"  y2="112"/><line x1="57"  y1="122" x2="57"  y2="116"/>
+    <line x1="74"  y1="122" x2="74"  y2="116"/><line x1="91"  y1="122" x2="91"  y2="112"/>
+    <line x1="108" y1="122" x2="108" y2="116"/><line x1="125" y1="122" x2="125" y2="116"/>
+    <line x1="142" y1="122" x2="142" y2="112"/><line x1="159" y1="122" x2="159" y2="116"/>
+  </g>
+
+  <!-- fixed jaw -->
+  <path d="M26 104 V64 h13 v40 Z" fill="#aeb6c2"/>
+  <path d="M26 122 v42 l13 -8 V122 Z" fill="#9aa3b1"/>
+  <!-- sliding jaw -->
+  <path d="M86 104 V70 h12 v34 Z" fill="#c3cbd6"/>
+  <path d="M86 122 v34 l12 -8 V122 Z" fill="#b3bbc7"/>
+  <!-- index line -->
+  <line x1="86" y1="98" x2="86" y2="130" stroke="#c62828" stroke-width="3"/>
+
+  <!-- dial -->
+  <circle cx="118" cy="66" r="38" fill="#8f97a3"/>
+  <circle cx="118" cy="66" r="32" fill="#f4f7f9" stroke="#5c646f" stroke-width="2"/>
+  <g stroke="#2b313b">
+    <line x1="118" y1="36" x2="118" y2="45" stroke-width="2.6"/>
+    <line x1="148" y1="66" x2="139" y2="66" stroke-width="2.6"/>
+    <line x1="118" y1="96" x2="118" y2="87" stroke-width="2.6"/>
+    <line x1="88"  y1="66" x2="97"  y2="66" stroke-width="2.6"/>
+    <line x1="139" y1="45" x2="134" y2="50" stroke-width="1.6"/>
+    <line x1="139" y1="87" x2="134" y2="82" stroke-width="1.6"/>
+    <line x1="97"  y1="87" x2="102" y2="82" stroke-width="1.6"/>
+    <line x1="97"  y1="45" x2="102" y2="50" stroke-width="1.6"/>
+  </g>
+  <!-- needle on division 34, and the hub -->
+  <line x1="118" y1="66" x2="141" y2="80" stroke="#d4a017" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="118" cy="66" r="5" fill="#3a4152"/>
+  <!-- bezel clamp screw -->
+  <circle cx="146" cy="38" r="6" fill="#aeb6c2" stroke="#5c646f" stroke-width="1.5"/>
+
+  <!-- depth rod -->
+  <rect x="176" y="109" width="14" height="8" rx="2" fill="#9aa3b1"/>
+</svg>

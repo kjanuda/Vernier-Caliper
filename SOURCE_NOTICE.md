@@ -1,0 +1,1 @@
+This project packages browser-side source obtained from a ZIP provided by the user. It makes no copyright/license grant. The original MechSimulator branding is preserved, and the caller must have permission to copy, redistribute, and publish the original site's code, assets, and exact visual design. Unrelated third-party analytics and ad scripts have been removed.

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    mechsimulator.com — favicon
+    Dial gauge icon: dark rounded background, cream face,
+    teal accent ring, 8 tick marks, dark needle, orange pivot.
+  -->
+
+  <!-- App-icon background -->
+  <rect width="32" height="32" rx="7" fill="#0d1117"/>
+
+  <!-- Chrome bezel ring -->
+  <circle cx="16" cy="16" r="13.5" fill="#1c1c2c" stroke="#50507a" stroke-width="0.7"/>
+
+  <!-- Dial face -->
+  <circle cx="16" cy="16" r="11.8" fill="#f4f4f2"/>
+
+  <!-- Teal accent border (site theme colour) -->
+  <circle cx="16" cy="16" r="11.8" fill="none" stroke="#26c6da" stroke-width="1.4"/>
+
+  <!-- ── Major ticks (12 / 3 / 6 / 9 o'clock, length 2.4) ── -->
+  <!-- 12 o'clock -->
+  <line x1="16"   y1="4.2"  x2="16"   y2="6.6"  stroke="#1c1c1c" stroke-width="1.7" stroke-linecap="round"/>
+  <!-- 3 o'clock -->
+  <line x1="27.8" y1="16"   x2="25.4" y2="16"   stroke="#1c1c1c" stroke-width="1.7" stroke-linecap="round"/>
+  <!-- 6 o'clock -->
+  <line x1="16"   y1="27.8" x2="16"   y2="25.4" stroke="#1c1c1c" stroke-width="1.7" stroke-linecap="round"/>
+  <!-- 9 o'clock -->
+  <line x1="4.2"  y1="16"   x2="6.6"  y2="16"   stroke="#1c1c1c" stroke-width="1.7" stroke-linecap="round"/>
+
+  <!-- ── Minor ticks (45° diagonals, length 1.3) ── -->
+  <!-- NE 45° -->
+  <line x1="24.34" y1="7.66"  x2="23.42" y2="8.58"  stroke="#888" stroke-width="1.1" stroke-linecap="round"/>
+  <!-- SE 135° -->
+  <line x1="24.34" y1="24.34" x2="23.42" y2="23.42" stroke="#888" stroke-width="1.1" stroke-linecap="round"/>
+  <!-- SW 225° -->
+  <line x1="7.66"  y1="24.34" x2="8.58"  y2="23.42" stroke="#888" stroke-width="1.1" stroke-linecap="round"/>
+  <!-- NW 315° -->
+  <line x1="7.66"  y1="7.66"  x2="8.58"  y2="8.58"  stroke="#888" stroke-width="1.1" stroke-linecap="round"/>
+
+  <!--
+    Needle pointing at ~45° clockwise from 12 o'clock (reading ≈ 25)
+    Tip  : (16 + 9·sin45°,  16 − 9·cos45°)  = (22.36, 9.64)
+    Tail : (16 − 3·sin45°,  16 + 3·cos45°)  = (13.88, 18.12)
+  -->
+  <line x1="13.88" y1="18.12" x2="22.36" y2="9.64"
+        stroke="#1a1a1a" stroke-width="1.9" stroke-linecap="round"/>
+
+  <!-- Centre pivot — orange glow dot -->
+  <circle cx="16" cy="16" r="2.4" fill="#e64a19"/>
+  <circle cx="15.2" cy="15.2" r="0.85" fill="rgba(255,200,160,0.55)"/>
+</svg>
